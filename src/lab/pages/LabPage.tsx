@@ -4,6 +4,7 @@ import { TabPlaceholder } from "../components/TabPlaceholder";
 import { useLabState, type LabMode } from "../hooks/useLabState";
 import { usePlayerData } from "../hooks/usePlayerData";
 import { normalizeFarm } from "../utils/normalizePlayer";
+import { CategoriesTab } from "./CategoriesTab";
 import { OverviewTab } from "./OverviewTab";
 
 function ModeToggle({
@@ -119,7 +120,24 @@ export function LabPage() {
             />
           )}
 
-          {activeTab !== "overview" && (
+          {activeTab === "categories" && (
+            <CategoriesTab
+              farm={farm}
+              actualResults={lab.actualResults}
+              experimentResults={lab.experimentResults}
+              deltas={lab.deltas}
+              loading={loading}
+              isMock={isMock}
+              error={error}
+              globalParams={lab.globalParams}
+              resources={lab.resources}
+              boosts={lab.boosts}
+              actualActiveBoosts={lab.actualActiveBoosts}
+              experimentActiveBoosts={lab.experimentActiveBoosts}
+            />
+          )}
+
+          {activeTab !== "overview" && activeTab !== "categories" && (
             <TabPlaceholder label={activeTabLabel} />
           )}
         </main>
