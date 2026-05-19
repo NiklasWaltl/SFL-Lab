@@ -3,17 +3,12 @@ import { BOOSTS } from "../config/boosts";
 import { RESOURCE_DEFAULTS } from "../config/resources";
 import type {
   Boost,
-  ExperimentDelta,
   GlobalParams,
   ResourceConfig,
   ResourceResult,
 } from "../types";
-import {
-  calculateDelta,
-  calculateResource,
-  getActiveBoosts,
-  sumExperimentBoostPrices,
-} from "../utils/calculations";
+import { calculateResource, getActiveBoosts } from "../utils/calculations";
+import { useExperiment } from "./useExperiment";
 
 export type LabMode = "actual" | "experiment";
 
@@ -39,10 +34,6 @@ export function useLabState() {
     cloneResources(RESOURCE_DEFAULTS),
   );
   const [boosts, setBoosts] = useState<Boost[]>(() => cloneBoosts(BOOSTS));
-  const [experimentBoostIds, setExperimentBoostIds] = useState<Set<string>>(
-    () => new Set(),
-  );
-  const [mode, setMode] = useState<LabMode>("actual");
 
   const setGlobalParam = useCallback(
     <K extends keyof GlobalParams>(key: K, value: GlobalParams[K]) => {
@@ -64,40 +55,9 @@ export function useLabState() {
     [],
   );
 
-  const toggleExperimentBoost = useCallback((id: string) => {
-    setBoosts((current) => {
-      const boost = current.find((b) => b.id === id);
-      if (!boost || boost.owned) return current;
-
-      setExperimentBoostIds((prev) => {
-        const next = new Set(prev);
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
-        return next;
-      });
-      return current;
-    });
-  }, []);
-
-  const setBoostOwned = useCallback((id: string, owned: boolean) => {
-    setBoosts((prev) => prev.map((b) => (b.id === id ? { ...b, owned } : b)));
-    if (!owned) return;
-    setExperimentBoostIds((prev) => {
-      if (!prev.has(id)) return prev;
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-  }, []);
-
   const actualActiveBoosts = useMemo(
-    () => getActiveBoosts(boosts, experimentBoostIds, "actual"),
-    [boosts, experimentBoostIds],
-  );
-
-  const experimentActiveBoosts = useMemo(
-    () => getActiveBoosts(boosts, experimentBoostIds, "experiment"),
-    [boosts, experimentBoostIds],
+    () => getActiveBoosts(boosts, new Set(), "actual"),
+    [boosts],
   );
 
   const actualResults: ResourceResult[] = useMemo(
@@ -108,47 +68,31 @@ export function useLabState() {
     [resources, globalParams, actualActiveBoosts],
   );
 
-  const experimentResults: ResourceResult[] = useMemo(
-    () =>
-      resources.map((r) =>
-        calculateResource(r, globalParams, experimentActiveBoosts),
-      ),
-    [resources, globalParams, experimentActiveBoosts],
+  const { clearBoostFromExperiment, ...experiment } = useExperiment(
+    boosts,
+    resources,
+    globalParams,
+    actualResults,
   );
 
-  const experimentPrice = useMemo(
-    () => sumExperimentBoostPrices(boosts, experimentBoostIds),
-    [boosts, experimentBoostIds],
-  );
-
-  const deltas: ExperimentDelta[] = useMemo(
-    () =>
-      actualResults.map((baseline, i) =>
-        calculateDelta(
-          baseline,
-          experimentResults[i],
-          experimentPrice > 0 ? experimentPrice : undefined,
-        ),
-      ),
-    [actualResults, experimentResults, experimentPrice],
+  const setBoostOwned = useCallback(
+    (id: string, owned: boolean) => {
+      setBoosts((prev) => prev.map((b) => (b.id === id ? { ...b, owned } : b)));
+      if (owned) clearBoostFromExperiment(id);
+    },
+    [clearBoostFromExperiment],
   );
 
   return {
     globalParams,
     resources,
     boosts,
-    experimentBoostIds,
-    mode,
-    setMode,
     setGlobalParam,
     setResourceField,
-    toggleExperimentBoost,
     setBoostOwned,
     actualResults,
-    experimentResults,
-    deltas,
     actualActiveBoosts,
-    experimentActiveBoosts,
+    ...experiment,
   };
 }
 
