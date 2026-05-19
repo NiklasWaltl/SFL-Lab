@@ -1,0 +1,117 @@
+// SFL-Lab – Berechnungslogik (pure functions, kein UI)
+// Alle Formeln zentral hier – Komponenten nur für Darstellung
+
+import type {
+  ResourceConfig,
+  GlobalParams,
+  Boost,
+  ResourceResult,
+  ExperimentDelta,
+} from "../types";
+
+// ---------------------------------------------------------------------------
+// Hilfsfunktionen
+// ---------------------------------------------------------------------------
+
+/** Zyklen pro Tag basierend auf Recovery-Zeit */
+export function cyclesPerDay(recoveryMinutes: number): number {
+  return 1440 / recoveryMinutes; // 1440 = Minuten pro Tag
+}
+
+/** Berechnet effektiven Yield pro Node nach Boosts */
+export function effectiveYield(baseYield: number, boosts: Boost[], resourceId: string): number {
+  let additive = 0;
+  let multiplier = 0;
+  for (const b of boosts) {
+    if (b.affectsResource !== resourceId && b.affectsResource !== "all") continue;
+    if (b.type === "addYield") additive += b.value;
+    if (b.type === "multiplyYield") multiplier += b.value;
+  }
+  return baseYield * (1 + multiplier) + additive;
+}
+
+/** Berechnet effektive Tool-Kosten in Coins nach Rabatten */
+export function effectiveToolCostCoins(baseCost: number, boosts: Boost[], resourceId: string): number {
+  let discount = 0;
+  for (const b of boosts) {
+    if (b.affectsResource !== resourceId && b.affectsResource !== "all") continue;
+    if (b.type === "reduceToolCost") discount += b.value;
+  }
+  return baseCost * (1 - Math.min(discount, 0.99));
+}
+
+/** Berechnet effektive Recovery-Zeit in Minuten nach Reduktionen */
+export function effectiveRecovery(baseMinutes: number, boosts: Boost[], resourceId: string): number {
+  let reduction = 0;
+  for (const b of boosts) {
+    if (b.affectsResource !== resourceId && b.affectsResource !== "all") continue;
+    if (b.type === "reduceRecovery") reduction += b.value;
+  }
+  return baseMinutes * (1 - Math.min(reduction, 0.99));
+}
+
+// ---------------------------------------------------------------------------
+// Hauptberechnung pro Ressource
+// ---------------------------------------------------------------------------
+
+export function calculateResource(
+  config: ResourceConfig,
+  params: GlobalParams,
+  activeBoosts: Boost[]
+): ResourceResult {
+  const recovery = effectiveRecovery(config.recoveryMinutes, activeBoosts, config.id);
+  const cycles = cyclesPerDay(recovery);
+  const yieldPerNode = effectiveYield(config.yieldPerNode, activeBoosts, config.id);
+  const toolCostCoins = effectiveToolCostCoins(config.toolCostCoins, activeBoosts, config.id);
+
+  const productionPerDay = config.nodeCount * cycles * yieldPerNode;
+
+  // Tool-Kosten: 1 Tool pro Node pro Zyklus (Durability = 1)
+  const toolsPerDay = (config.nodeCount * cycles) / config.toolDurability;
+  const coinCostPerDay = toolsPerDay * toolCostCoins;
+  const woodCostPerDay = config.toolCostWood ? toolsPerDay * config.toolCostWood : undefined;
+
+  // Flower-Kosten (Coins → Flower)
+  const flwCostPerDay = coinCostPerDay / params.coinToFlowerRatio;
+
+  // P2P Revenue & Profit
+  const marketPrice = config.id === "wood" ? params.marketPriceWood : params.marketPriceStone;
+  const p2pRevenueFlw = productionPerDay * marketPrice * 0.9; // -10% P2P Fee
+  const p2pProfitFlw = p2pRevenueFlw - flwCostPerDay;
+
+  return {
+    resourceId: config.id,
+    cyclesPerDay: cycles,
+    productionPerDay,
+    coinCostPerDay,
+    woodCostPerDay,
+    flwCostPerDay,
+    p2pRevenueFlw,
+    p2pProfitFlw,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Experiment-Delta (Vergleich Ist vs. Experiment)
+// ---------------------------------------------------------------------------
+
+export function calculateDelta(
+  baseline: ResourceResult,
+  experiment: ResourceResult,
+  nftPrice?: number
+): ExperimentDelta {
+  const productionDelta = experiment.productionPerDay - baseline.productionPerDay;
+  const profitDelta = experiment.p2pProfitFlw - baseline.p2pProfitFlw;
+
+  let breakEvenDays: number | null = null;
+  if (nftPrice && profitDelta > 0) {
+    breakEvenDays = Math.ceil(nftPrice / profitDelta);
+  }
+
+  return {
+    resourceId: baseline.resourceId,
+    productionDelta,
+    profitDelta,
+    breakEvenDays,
+  };
+}

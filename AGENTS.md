@@ -11,8 +11,35 @@ Dieses Dokument definiert verbindliche Regeln für alle AI-Agenten (Claude, GPT,
 Das Hauptfeature ist ein **Experiment-Modus**: Nutzer können NFTs und Skills simulieren, die sie nicht besitzen, und sehen live wie sich Produktion, Kosten und Gewinn auf ihrer echten Farm verändern.
 
 - Fork-Repo: https://github.com/NiklasWaltl/SFL-Lab
-- Stack: React, TypeScript, rsbuild, Tailwind CSS, Dark Mode
+- Stack: React, TypeScript, rsbuild + Vite, Tailwind CSS, Dark Mode
 - Eigener Code lebt ausschließlich in: `src/lab/`
+- Lokal verifiziert: `yarn dev` läuft auf http://localhost:3000/
+- Aktives Testnet: `VITE_NETWORK=mumbai` (Fallback: `amoy` wenn Wallet-Probleme)
+
+---
+
+## Verzeichnisstruktur
+
+```
+SFL-Lab/
+├── src/
+│   ├── game/          ❌ SFL-Originalcode – NIEMALS ändern
+│   ├── features/      ❌ SFL-Originalcode – NIEMALS ändern
+│   ├── components/    ❌ SFL-Originalcode – NIEMALS ändern
+│   ├── lib/            ❌ SFL-Originalcode – NIEMALS ändern
+│   ├── assets/        ❌ SFL-Originalcode – NIEMALS ändern
+│   └── lab/            ✅ EIGENER CODE – nur hier entwickeln
+│       ├── components/  UI-Komponenten für SFL-Lab
+│       ├── config/      NFT/Skill-Daten (boosts.ts, resources.ts)
+│       ├── hooks/       Custom React Hooks
+│       ├── pages/       Seiten: Ist-Zustand, Experiment-Modus
+│       ├── types/       TypeScript-Typen (index.ts)
+│       └── utils/       Berechnungslogik (calculations.ts)
+├── .env               Lokal, nicht in Git
+├── .env.portal        Vorlage für .env
+├── AGENTS.md          Dieses Dokument
+└── .cursor/rules/     Cursor-Regeln (automatisch geladen)
+```
 
 ---
 
@@ -22,65 +49,56 @@ Das Hauptfeature ist ein **Experiment-Modus**: Nutzer können NFTs und Skills si
 
 | Pfad | Grund |
 |---|---|
-| `src/game/` | Originalcode Sunflower Land |
-| `src/features/` | Originalcode Sunflower Land |
-| `src/components/` | Originalcode Sunflower Land |
-| `src/lib/` | Originalcode Sunflower Land |
-| `src/assets/` | Originalcode Sunflower Land |
-| `index.html` | Nur anfassen wenn zwingend nötig für Setup |
-| `rsbuild.config.ts` | Nur anfassen wenn zwingend nötig für Setup |
-| `vite.config.ts` | Nur anfassen wenn zwingend nötig für Setup |
-| `tailwind.config.js` | Nur anfassen wenn zwingend nötig für Setup |
-| `tsconfig.json` | Nur anfassen wenn zwingend nötig für Setup |
+| `src/game/**` | Originalcode Sunflower Land |
+| `src/features/**` | Originalcode Sunflower Land |
+| `src/components/**` | Originalcode Sunflower Land |
+| `src/lib/**` | Originalcode Sunflower Land |
+| `src/assets/**` | Originalcode Sunflower Land |
+| `index.html` | Nur wenn zwingend nötig + Rückfrage |
+| `rsbuild.config.ts` | Nur wenn zwingend nötig + Rückfrage |
+| `vite.config.ts` | Nur wenn zwingend nötig + Rückfrage |
+| `tailwind.config.js` | Nur wenn zwingend nötig + Rückfrage |
+| `tsconfig.json` | Nur wenn zwingend nötig + Rückfrage |
 
-> Kein SFL-Originalcode wird verändert, verschoben, umbenannt oder gelöscht. Keine Ausnahmen.
+### ✅ Erlaubter Bereich
 
----
-
-### ✅ Erlaubter Bereich – Ausschließlich hier entwickeln
-
-```
-src/lab/
-├── components/     # UI-Komponenten für SFL-Lab
-├── config/         # NFT- und Skill-Datendefinitionen (JSON/TS)
-├── hooks/          # Custom React Hooks
-├── pages/          # Seiten/Views (Ist-Zustand, Experiment-Modus)
-├── types/          # TypeScript-Typen
-└── utils/          # Berechnungslogik (reine Funktionen, kein UI)
-```
-
-> Neuer Code kommt **ausnahmslos** in `src/lab/`. Keine Datei außerhalb dieses Ordners wird neu erstellt, außer Konfigurationsdateien im Root die explizit besprochen wurden.
+> Neuer Code kommt **ausnahmslos** in `src/lab/`.
 
 ---
 
 ## Import-Regeln
 
-- Imports aus SFL-Originalcode (`src/game`, `src/features`, etc.) sind **verboten**, außer sie sind explizit als öffentliche API dokumentiert.
-- Wenn SFL-Typen benötigt werden, werden sie in `src/lab/types/` gespiegelt – kein direkter Import.
-- Externe Libraries werden nur über `package.json` hinzugefügt, nie per CDN oder direktem Script-Tag.
+- Kein Import aus `src/game`, `src/features`, `src/components`, `src/lib`
+- SFL-Typen bei Bedarf in `src/lab/types/` spiegeln – nie direkt importieren
+- Neue Env-Variablen beginnen mit `VITE_LAB_`
+- Externe Libraries nur über `package.json`, nie per CDN
 
 ---
 
 ## Architekturprinzipien
 
-- **Berechnungslogik ist von UI getrennt.** Alle Formeln leben in `src/lab/utils/`, nicht in Komponenten.
-- **Daten sind konfigurierbar.** NFTs, Skills und deren Effekte leben in `src/lab/config/` als TypeScript-Objekte, nicht hardcoded in Komponenten.
-- **Kein Over-Engineering.** Lieber einfach und erweiterbar als komplex und starr.
-- **Modular aufbauen.** Erst Holz & Stein, dann Iron, Gold, Crops etc. – jede Ressource ist ein eigenes Modul.
+- Berechnungslogik lebt in `src/lab/utils/` – nie in Komponenten
+- NFT/Skill-Effekte sind in `src/lab/config/` konfigurierbar – nie hardcoded
+- Einfach und erweiterbar vor komplex und clever
+- Modularer Aufbau: erst Holz & Stein, dann Iron, Gold, Crops
 
 ---
 
-## Env-Regeln
+## Env
 
-- Die `.env` Datei basiert auf `.env.portal` aus dem Repo-Root.
-- `.env` wird **nicht** in Git committed (steht in `.gitignore`).
-- Neue Env-Variablen für SFL-Lab beginnen mit `VITE_LAB_` um sie klar von SFL-Originalvariablen zu trennen.
+| Variable | Wert | Notiz |
+|---|---|---|
+| `VITE_NETWORK` | `mumbai` | Fallback: `amoy` |
+| `VITE_API_URL` | `https://api-dev.sunflower-land.com` | |
+| `VITE_ROOM_URL` | `wss://mmo-dev.sunflower-land.com` | |
+| `VITE_PORTAL_APP` | `sfl-lab` | |
+| `VITE_PORTAL_GAME_URL` | `https://sunflower-land.com/testnet` | |
+| `VITE_ANIMATION_URL` | `https://animations-dev.sunflower-land.com/` | |
 
 ---
 
 ## Bei Unsicherheit
 
-Wenn unklar ist ob eine Änderung SFL-Originalcode betrifft:
 1. Nicht ändern.
 2. Rückfrage stellen.
 3. Erst nach expliziter Bestätigung handeln.
