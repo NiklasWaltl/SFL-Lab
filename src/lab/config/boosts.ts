@@ -72,4 +72,15 @@ export const BOOSTS: Boost[] = [
     owned: true,
   },
   // --- STONE: (Boosts noch ergänzen) ---
+  // --- Experiment: nicht owned (NFT-Simulator V1) ---
+  {
+    id: "golden_beaver",
+    label: "Golden Beaver",
+    source: "nft",
+    affectsResource: "wood",
+    type: "addYield",
+    value: 0.15,
+    priceFlw: 45,
+    owned: false,
+  },
 ];

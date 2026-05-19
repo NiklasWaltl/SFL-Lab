@@ -5,6 +5,7 @@ import { useLabState, type LabMode } from "../hooks/useLabState";
 import { usePlayerData } from "../hooks/usePlayerData";
 import { normalizeFarm } from "../utils/normalizePlayer";
 import { CategoriesTab } from "./CategoriesTab";
+import { NftSimulatorTab } from "./NftSimulatorTab";
 import { OverviewTab } from "./OverviewTab";
 
 function ModeToggle({
@@ -137,9 +138,27 @@ export function LabPage() {
             />
           )}
 
-          {activeTab !== "overview" && activeTab !== "categories" && (
-            <TabPlaceholder label={activeTabLabel} />
+          {activeTab === "nft-simulator" && (
+            <NftSimulatorTab
+              farm={farm}
+              boosts={lab.boosts}
+              actualResults={lab.actualResults}
+              experimentResults={lab.experimentResults}
+              deltas={lab.deltas}
+              loading={loading}
+              isMock={isMock}
+              error={error}
+              globalParams={lab.globalParams}
+              resources={lab.resources}
+              actualActiveBoosts={lab.actualActiveBoosts}
+            />
           )}
+
+          {activeTab !== "overview" &&
+            activeTab !== "categories" &&
+            activeTab !== "nft-simulator" && (
+              <TabPlaceholder label={activeTabLabel} />
+            )}
         </main>
       </div>
     </div>
