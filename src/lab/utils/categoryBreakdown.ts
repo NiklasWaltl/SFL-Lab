@@ -6,54 +6,28 @@ import type {
   ResourceConfig,
   ResourceResult,
 } from "../types";
-import type { CategoryKey, CategoryValue } from "../types/categories";
+import type { Category, CategoryKey, CategoryValue } from "../types/categories";
+import { CATEGORIES } from "../config/categories.config";
 import { calculateBoostMarginalProfit } from "./calculations";
 
+const CATEGORY_BY_KEY = Object.fromEntries(
+  CATEGORIES.map((category) => [category.key, category]),
+) as Record<CategoryKey, Category>;
+
+/** Label/description lookup derived from {@link CATEGORIES} (SimulatorResult). */
 export const CATEGORY_META: Record<
   CategoryKey,
-  { label: string; description?: string }
-> = {
-  resources: {
-    label: "Ressourcen",
-    description: "P2P-Gewinn aus Wood und Stone (FLW/Tag)",
-  },
-  crops: {
-    label: "Crops",
-    description: "Datenbasis für Ernten folgt in einer späteren Version",
-  },
-  animals: {
-    label: "Tiere",
-    description: "Datenbasis für Tiere folgt in einer späteren Version",
-  },
-  crafting: {
-    label: "Crafting",
-    description: "Datenbasis für Crafting folgt in einer späteren Version",
-  },
-  trading: {
-    label: "Trading",
-    description: "Datenbasis für Trading folgt in einer späteren Version",
-  },
-  boosts: {
-    label: "Boosts & NFTs",
-    description:
-      "Marginaler Gewinnbeitrag pro Boost (Attribution, nicht additiv zum Netto)",
-  },
-  costs: {
-    label: "Kosten",
-    description: "Gesamtkosten in FLW/Tag (Tools, umgerechnete Coins)",
-  },
-  net: {
-    label: "Netto",
-    description: "Gesamtgewinn P2P über alle berechneten Ressourcen",
-  },
-};
+  Pick<Category, "label" | "description">
+> = Object.fromEntries(
+  CATEGORIES.map((category) => [
+    category.key,
+    { label: category.label, description: category.description },
+  ]),
+) as Record<CategoryKey, Pick<Category, "label" | "description">>;
 
-const PLACEHOLDER_KEYS: CategoryKey[] = [
-  "crops",
-  "animals",
-  "crafting",
-  "trading",
-];
+const PLACEHOLDER_KEYS: CategoryKey[] = CATEGORIES.filter(
+  (category) => category.defaultStatus === "placeholder",
+).map((category) => category.key);
 
 function sumProfit(results: ResourceResult[]): number {
   return results.reduce((sum, r) => sum + r.p2pProfitFlw, 0);
@@ -123,7 +97,7 @@ function buildCategory(
   status: CategoryValue["status"],
   description?: string,
 ): CategoryValue {
-  const meta = CATEGORY_META[key];
+  const meta = CATEGORY_BY_KEY[key];
   return {
     key,
     label: meta.label,
