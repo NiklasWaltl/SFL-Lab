@@ -7,6 +7,7 @@ import { normalizeFarm } from "../utils/normalizePlayer";
 import { CategoriesTab } from "./CategoriesTab";
 import { NftSimulatorTab } from "./NftSimulatorTab";
 import { OverviewTab } from "./OverviewTab";
+import { PortfolioTab } from "./PortfolioTab";
 
 function ModeToggle({
   mode,
@@ -154,9 +155,23 @@ export function LabPage() {
             />
           )}
 
+          {activeTab === "portfolio" && (
+            <PortfolioTab
+              boosts={lab.boosts}
+              resources={lab.resources}
+              globalParams={lab.globalParams}
+              actualActiveBoosts={lab.actualActiveBoosts}
+              actualResults={lab.actualResults}
+              loading={loading}
+              isMock={isMock}
+              error={error}
+            />
+          )}
+
           {activeTab !== "overview" &&
             activeTab !== "categories" &&
-            activeTab !== "nft-simulator" && (
+            activeTab !== "nft-simulator" &&
+            activeTab !== "portfolio" && (
               <TabPlaceholder label={activeTabLabel} />
             )}
         </main>
