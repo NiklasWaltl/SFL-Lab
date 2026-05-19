@@ -13,7 +13,7 @@ Das Hauptfeature ist ein **Experiment-Modus**: Nutzer können NFTs und Skills si
 - Fork-Repo: https://github.com/NiklasWaltl/SFL-Lab
 - Stack: React, TypeScript, rsbuild + Vite, Tailwind CSS, Dark Mode
 - Eigener Code lebt ausschließlich in: `src/lab/`
-- Dev-Einstieg: `vite src/lab/lab.html --port 3001`
+- Dev-Einstieg: `yarn dev:lab` (Port 3001, Entry `src/lab/index.html`)
 - Lokal verifiziert: `yarn dev` läuft auf http://localhost:3000/ (SFL-Original)
 - Aktives Testnet: `VITE_NETWORK=mumbai` (Fallback: `amoy` wenn Wallet-Probleme)
 
@@ -67,7 +67,7 @@ SFL-Lab/
 │       │                  bumpkinLevel.ts, overviewKpis.ts
 │       ├── index.tsx
 │       ├── styles.css
-│       └── lab.html       ← Dev-Einstieg
+│       └── index.html     ← Dev-Einstieg
 ├── .env                   Lokal, nicht in Git
 ├── .env.portal            Vorlage für .env
 ├── AGENTS.md              Dieses Dokument

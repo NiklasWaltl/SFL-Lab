@@ -6,6 +6,7 @@
   "private": true,
   "scripts": {
     "dev": "set NODE_ENV=development && vite --port 3000 --host",
+    "dev:lab": "set NODE_ENV=development && vite src/lab --port 3001 --host",
     "rsbuild": "set NODE_ENV=development && rsbuild dev --port 3000",
     "dev-telegram": "set NODE_ENV=development && vite --port 443 --host",
     "build": "tsc && vite build",
