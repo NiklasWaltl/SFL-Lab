@@ -1,7 +1,14 @@
 // SFL-Lab – Portfolio-Tab
 // Zeigt eigene NFTs/Boosts als Portfolio-Positionen mit wirtschaftlicher Analyse
-import React, { useMemo, useState } from "react";
-import type { Boost, GlobalParams, ResourceConfig, ResourceResult } from "../types";
+import React, { useCallback, useMemo, useState } from "react";
+import { useScenarioPersistence } from "../hooks/useScenarioPersistence";
+import type {
+  Boost,
+  GlobalParams,
+  ResourceConfig,
+  ResourceResult,
+} from "../types";
+import type { ScenarioPortfolioData } from "../types/scenario";
 import { buildPortfolioPositions } from "../utils/portfolioCalc";
 import type { PortfolioPosition } from "../types/portfolio";
 
@@ -29,8 +36,7 @@ function fmtDays(v: number | null): string {
 }
 
 function RoiBadge({ roi }: { roi: number | null }) {
-  if (roi === null)
-    return <span className="text-gray-500 text-xs">—</span>;
+  if (roi === null) return <span className="text-gray-500 text-xs">{"—"}</span>;
   const positive = roi >= 0;
   return (
     <span
@@ -40,7 +46,9 @@ function RoiBadge({ roi }: { roi: number | null }) {
           : "bg-red-900/60 text-red-300"
       }`}
     >
-      {positive ? "+" : ""}{roi.toFixed(1)}%
+      {positive ? "+" : ""}
+      {roi.toFixed(1)}
+      {"%"}
     </span>
   );
 }
@@ -58,8 +66,13 @@ function BreakEvenBar({
   return (
     <div className="mt-1.5">
       <div className="flex justify-between text-[10px] text-gray-500 mb-0.5">
-        <span>Break-even Fortschritt</span>
-        <span>{daysSince} / {breakEvenDays} Tage</span>
+        <span>{"Break-even Fortschritt"}</span>
+        <span>
+          {daysSince}
+          {" / "}
+          {breakEvenDays}
+          {" Tage"}
+        </span>
       </div>
       <div className="h-1.5 w-full rounded-full bg-gray-700">
         <div
@@ -86,8 +99,7 @@ function PositionCard({
   purchaseDateInput: string;
   currentValueInput: string;
 }) {
-  const worthIt =
-    pos.breakEvenDays !== null && pos.breakEvenDays <= 365;
+  const worthIt = pos.breakEvenDays !== null && pos.breakEvenDays <= 365;
 
   return (
     <div
@@ -104,22 +116,23 @@ function PositionCard({
             <span className="font-semibold text-[#ead4aa]">{pos.label}</span>
             {pos.source === "nft" && (
               <span className="rounded bg-amber-700/40 px-1.5 py-0.5 text-[10px] font-medium text-amber-300">
-                NFT
+                {"NFT"}
               </span>
             )}
             {pos.source === "skill" && (
               <span className="rounded bg-blue-900/40 px-1.5 py-0.5 text-[10px] font-medium text-blue-300">
-                Skill
+                {"Skill"}
               </span>
             )}
             {!pos.owned && (
               <span className="rounded bg-gray-700/60 px-1.5 py-0.5 text-[10px] text-gray-400">
-                nicht owned
+                {"nicht owned"}
               </span>
             )}
           </div>
           <p className="text-xs text-gray-500 mt-0.5">
-            Ressource: {pos.affectsResource}
+            {"Ressource: "}
+            {pos.affectsResource}
           </p>
         </div>
         {pos.breakEvenDays !== null && (
@@ -137,16 +150,8 @@ function PositionCard({
 
       {/* Kennzahlen-Grid */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 mb-3">
-        <Metric
-          label="Kaufpreis"
-          value={flw(pos.purchasePriceFlw)}
-          sub="FLW"
-        />
-        <Metric
-          label="Akt. Wert"
-          value={flw(pos.currentValueFlw)}
-          sub="FLW"
-        />
+        <Metric label="Kaufpreis" value={flw(pos.purchasePriceFlw)} sub="FLW" />
+        <Metric label="Akt. Wert" value={flw(pos.currentValueFlw)} sub="FLW" />
         <Metric
           label="+Wert / Tag"
           value={flw(pos.dailyValueFlw, 4)}
@@ -162,17 +167,21 @@ function PositionCard({
       {/* ROI + Earned */}
       <div className="flex flex-wrap items-center gap-3 text-xs mb-3">
         <span className="text-gray-400">
-          ROI: <RoiBadge roi={pos.roiPercent} />
+          {"ROI: "}
+          <RoiBadge roi={pos.roiPercent} />
         </span>
         {pos.earnedSoPurchaseFlw !== null && (
           <span className="text-gray-400">
-            Bereits erwirtschaftet:{" "}
+            {"Bereits erwirtschaftet:"}{" "}
             <span className="text-green-300 font-medium">
-              {pos.earnedSoPurchaseFlw.toFixed(2)} FLW
+              {pos.earnedSoPurchaseFlw.toFixed(2)}
+              {" FLW"}
             </span>
             {pos.purchasePriceFlw && (
               <span className="text-gray-600">
-                {" "}/{ pos.purchasePriceFlw.toFixed(2)} FLW
+                {" /"}
+                {pos.purchasePriceFlw.toFixed(2)}
+                {" FLW"}
               </span>
             )}
           </span>
@@ -188,7 +197,7 @@ function PositionCard({
       {/* Editierbare Inputs */}
       <div className="mt-3 flex flex-wrap gap-3">
         <label className="flex flex-col gap-1">
-          <span className="text-[10px] text-gray-500">Kaufdatum</span>
+          <span className="text-[10px] text-gray-500">{"Kaufdatum"}</span>
           <input
             type="date"
             value={purchaseDateInput}
@@ -197,7 +206,9 @@ function PositionCard({
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-[10px] text-gray-500">Akt. Marktwert (FLW)</span>
+          <span className="text-[10px] text-gray-500">
+            {"Akt. Marktwert (FLW)"}
+          </span>
           <input
             type="number"
             min="0"
@@ -248,9 +259,42 @@ export function PortfolioTab({
   isMock,
   error,
 }: PortfolioTabProps) {
-  const [purchaseDates, setPurchaseDates] = useState<Record<string, string>>({});
-  const [currentValues, setCurrentValues] = useState<Record<string, string>>({});
-  const [filter, setFilter] = useState<"all" | "owned" | "nft" | "skill">("all");
+  const { scenarios, activeScenarioId, saveScenario } =
+    useScenarioPersistence();
+
+  const activeScenario = useMemo(
+    () => scenarios.find((s) => s.id === activeScenarioId) ?? scenarios[0],
+    [scenarios, activeScenarioId],
+  );
+
+  const purchaseDates = useMemo(
+    () => activeScenario?.data.portfolio.purchaseDates ?? {},
+    [activeScenario],
+  );
+
+  const currentValues = useMemo(
+    () => activeScenario?.data.portfolio.currentValues ?? {},
+    [activeScenario],
+  );
+
+  const [filter, setFilter] = useState<"all" | "owned" | "nft" | "skill">(
+    "all",
+  );
+
+  const patchPortfolio = useCallback(
+    (patch: Partial<ScenarioPortfolioData>) => {
+      if (!activeScenario) return;
+      saveScenario({
+        ...activeScenario,
+        data: {
+          ...activeScenario.data,
+          portfolio: { ...activeScenario.data.portfolio, ...patch },
+        },
+        updatedAt: new Date().toISOString(),
+      });
+    },
+    [activeScenario, saveScenario],
+  );
 
   const currentValuesNum = useMemo(() => {
     const out: Record<string, number> = {};
@@ -271,13 +315,21 @@ export function PortfolioTab({
         purchaseDates,
         currentValuesNum,
       ),
-    [boosts, resources, globalParams, actualActiveBoosts, purchaseDates, currentValuesNum],
+    [
+      boosts,
+      resources,
+      globalParams,
+      actualActiveBoosts,
+      purchaseDates,
+      currentValuesNum,
+    ],
   );
 
   const filtered = useMemo(() => {
     if (filter === "owned") return positions.filter((p) => p.owned);
     if (filter === "nft") return positions.filter((p) => p.source === "nft");
-    if (filter === "skill") return positions.filter((p) => p.source === "skill");
+    if (filter === "skill")
+      return positions.filter((p) => p.source === "skill");
     return positions;
   }, [positions, filter]);
 
@@ -290,15 +342,19 @@ export function PortfolioTab({
     .reduce((s, p) => s + (p.earnedSoPurchaseFlw ?? 0), 0);
 
   const handleSetDate = (id: string, val: string) =>
-    setPurchaseDates((prev) => ({ ...prev, [id]: val }));
+    patchPortfolio({
+      purchaseDates: { ...purchaseDates, [id]: val },
+    });
 
   const handleSetCurrentValue = (id: string, val: string) =>
-    setCurrentValues((prev) => ({ ...prev, [id]: val }));
+    patchPortfolio({
+      currentValues: { ...currentValues, [id]: val },
+    });
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20 text-gray-400">
-        Lade Farm-Daten…
+        {"Lade Farm-Daten…"}
       </div>
     );
   }
@@ -308,7 +364,7 @@ export function PortfolioTab({
       {/* Mock-Banner */}
       {isMock && (
         <div className="rounded-lg border border-amber-600/40 bg-amber-900/20 px-4 py-2 text-sm text-amber-300">
-          ⚠ Beispiel-Daten (keine echte Farm verbunden)
+          {"⚠ Beispiel-Daten (keine echte Farm verbunden)"}
         </div>
       )}
       {error && (
@@ -347,7 +403,13 @@ export function PortfolioTab({
                 : "bg-[#1a1730] text-gray-400 hover:text-[#ead4aa]"
             }`}
           >
-            {f === "all" ? "Alle" : f === "owned" ? "Besitz" : f === "nft" ? "NFTs" : "Skills"}
+            {f === "all"
+              ? "Alle"
+              : f === "owned"
+                ? "Besitz"
+                : f === "nft"
+                  ? "NFTs"
+                  : "Skills"}
           </button>
         ))}
       </div>
@@ -355,7 +417,7 @@ export function PortfolioTab({
       {/* Karten-Liste */}
       {filtered.length === 0 ? (
         <p className="text-gray-500 text-sm">
-          Keine Einträge für diesen Filter.
+          {"Keine Einträge für diesen Filter."}
         </p>
       ) : (
         <div className="space-y-3">
@@ -373,7 +435,9 @@ export function PortfolioTab({
       )}
 
       <p className="text-[11px] text-gray-600">
-        * Täglicher Mehrwert = marginaler P2P-Profit durch diesen Boost allein. Break-even basiert auf Kaufpreis ÷ täglichem Mehrwert.
+        {
+          "* Täglicher Mehrwert = marginaler P2P-Profit durch diesen Boost allein. Break-even basiert auf Kaufpreis ÷ täglichem Mehrwert."
+        }
       </p>
     </div>
   );
@@ -391,7 +455,9 @@ function SummaryCard({
   return (
     <div className="rounded-xl border border-[#3e2731]/50 bg-[#181425] px-4 py-3">
       <p className="text-[11px] text-gray-500 mb-1">{label}</p>
-      <p className={`text-lg font-bold ${highlight ? "text-green-300" : "text-[#ead4aa]"}`}>
+      <p
+        className={`text-lg font-bold ${highlight ? "text-green-300" : "text-[#ead4aa]"}`}
+      >
         {value}
       </p>
     </div>
