@@ -1,0 +1,54 @@
+---
+description: SFL-Lab Projektregeln – gilt für alle Dateien in diesem Repo
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# SFL-Lab – Cursor Rules
+
+## Projektkontext
+
+Dieses Repo ist ein Fork von Sunflower Land. Das eigene Feature (Experiment-Modus / NFT-Simulator) lebt **ausschließlich** in `src/lab/`. Alles andere ist Sunflower-Land-Originalcode und darf nicht verändert werden.
+
+## ❌ Verboten – Niemals anfassen
+
+- `src/game/**`
+- `src/features/**`
+- `src/components/**`
+- `src/lib/**`
+- `src/assets/**`
+
+Auch keine indirekten Änderungen (Imports hinzufügen, Re-Exports, Wrapping).
+
+## ✅ Erlaubt – Nur hier entwickeln
+
+- `src/lab/**` → eigener Code
+- Root-Konfigurationsdateien nur wenn explizit besprochen
+
+## Struktur von src/lab/
+
+```
+src/lab/
+├── components/   # UI-Komponenten
+├── config/       # NFT/Skill-Daten als TS-Objekte
+├── hooks/        # Custom Hooks
+├── pages/        # Seiten (Ist-Zustand, Experiment)
+├── types/        # TypeScript-Typen
+└── utils/        # Berechnungslogik (pure functions)
+```
+
+## Import-Regeln
+
+- Kein Import aus `src/game`, `src/features`, `src/components`, `src/lib`
+- SFL-Typen bei Bedarf in `src/lab/types/` spiegeln
+- Neue Env-Variablen mit `VITE_LAB_` Präfix
+
+## Architektur
+
+- Berechnungslogik (Formeln) gehört in `src/lab/utils/` – nie in Komponenten
+- NFT/Skill-Effekte sind in `src/lab/config/` konfigurierbar – nie hardcoded
+- Einfach und erweiterbar vor komplex und clever
+
+## Bei Unsicherheit
+
+Nicht ändern, sondern Rückfrage stellen.
