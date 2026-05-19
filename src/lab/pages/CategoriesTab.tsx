@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { CategoryCard } from "../components/categories/CategoryCard";
 import { CategoryDetails } from "../components/categories/CategoryDetails";
+import { CATEGORIES } from "../config/categories.config";
 import type {
   Boost,
   ExperimentDelta,
@@ -72,6 +73,15 @@ export function CategoriesTab({
   );
 
   const summary = useMemo(() => getCategorySummary(categories), [categories]);
+
+  const orderedCategories = useMemo(() => {
+    const order = new Map(
+      CATEGORIES.map((category, index) => [category.key, index]),
+    );
+    return [...categories].sort(
+      (a, b) => (order.get(a.key) ?? 0) - (order.get(b.key) ?? 0),
+    );
+  }, [categories]);
 
   const detailContext: CategoryDetailContext = useMemo(
     () => ({
@@ -155,7 +165,7 @@ export function CategoriesTab({
           {"Gewinnbereiche"}
         </h2>
         <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {categories.map((category) => {
+          {orderedCategories.map((category) => {
             const isExpanded = expandedKey === category.key;
             return (
               <li key={category.key} className="flex flex-col">
@@ -172,7 +182,7 @@ export function CategoriesTab({
                     detailContext={detailContext}
                     actualResults={actualResults}
                     experimentResults={experimentResults}
-                    allCategories={categories}
+                    allCategories={orderedCategories}
                   />
                 )}
               </li>

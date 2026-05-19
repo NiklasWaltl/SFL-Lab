@@ -12,6 +12,14 @@ export type CategoryKey =
 
 export type CategoryStatus = "calculated" | "partial" | "placeholder";
 
+/** Static category definition (labels, descriptions, default status). */
+export interface Category {
+  key: CategoryKey;
+  label: string;
+  description?: string;
+  defaultStatus: CategoryStatus;
+}
+
 export interface CategoryValue {
   key: CategoryKey;
   label: string;
