@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React from "react";
 import { SimulatorPicker } from "../components/simulator/SimulatorPicker";
 import { SimulatorResult } from "../components/simulator/SimulatorResult";
+import { useNftSimulator } from "../hooks/useNftSimulator";
 import type {
   Boost,
   ExperimentDelta,
@@ -8,15 +9,7 @@ import type {
   ResourceConfig,
   ResourceResult,
 } from "../types";
-import type { CategoryValue } from "../types/categories";
 import type { NormalizedFarm } from "../types/player";
-import type { SimulatorSelection } from "../types/simulator";
-import { calculateResource } from "../utils/calculations";
-import { getCategoryBreakdown } from "../utils/categoryBreakdown";
-import {
-  calculateSimulatorImpact,
-  getSimulatorBoostOptions,
-} from "../utils/simulator";
 
 export interface NftSimulatorTabProps {
   boosts: Boost[];
@@ -32,11 +25,6 @@ export interface NftSimulatorTabProps {
   actualActiveBoosts: Boost[];
 }
 
-const DEFAULT_SELECTION: SimulatorSelection = {
-  boostId: null,
-  enabled: true,
-};
-
 export function NftSimulatorTab({
   boosts,
   farm,
@@ -48,82 +36,23 @@ export function NftSimulatorTab({
   resources,
   actualActiveBoosts,
 }: NftSimulatorTabProps) {
-  const [selection, setSelection] =
-    useState<SimulatorSelection>(DEFAULT_SELECTION);
-
-  const boostOptions = useMemo(
-    () => getSimulatorBoostOptions(boosts),
-    [boosts],
-  );
-
-  const simulatedActiveBoosts = useMemo(() => {
-    if (!selection.enabled || !selection.boostId) {
-      return actualActiveBoosts;
-    }
-    const boost = boosts.find((b) => b.id === selection.boostId);
-    if (!boost) return actualActiveBoosts;
-    if (actualActiveBoosts.some((b) => b.id === boost.id)) {
-      return actualActiveBoosts;
-    }
-    return [...actualActiveBoosts, boost];
-  }, [selection.enabled, selection.boostId, boosts, actualActiveBoosts]);
-
-  const simulatedResults: ResourceResult[] = useMemo(
-    () =>
-      resources.map((r) =>
-        calculateResource(r, globalParams, simulatedActiveBoosts),
-      ),
-    [resources, globalParams, simulatedActiveBoosts],
-  );
-
-  const simulatorCategories: CategoryValue[] = useMemo(
-    () =>
-      getCategoryBreakdown(
-        farm,
-        actualResults,
-        simulatedResults,
-        [],
-        globalParams,
-        resources,
-        boosts,
-        actualActiveBoosts,
-        simulatedActiveBoosts,
-      ),
-    [
-      farm,
-      actualResults,
-      simulatedResults,
-      globalParams,
-      resources,
-      boosts,
-      actualActiveBoosts,
-      simulatedActiveBoosts,
-    ],
-  );
-
-  const impact = useMemo(
-    () =>
-      calculateSimulatorImpact(
-        selection.boostId,
-        selection.enabled,
-        boosts,
-        actualResults,
-        simulatedResults,
-        simulatorCategories,
-        selection.overridePriceFlw,
-      ),
-    [
-      selection.boostId,
-      selection.enabled,
-      selection.overridePriceFlw,
-      boosts,
-      actualResults,
-      simulatedResults,
-      simulatorCategories,
-    ],
-  );
-
-  const selectedBoost = boosts.find((b) => b.id === selection.boostId) ?? null;
+  const {
+    boostOptions,
+    params,
+    setParams,
+    selectedAssetKey,
+    selectAsset,
+    impact,
+    selectedBoost,
+    simulatorCategories,
+  } = useNftSimulator({
+    boosts,
+    farm,
+    actualResults,
+    globalParams,
+    resources,
+    actualActiveBoosts,
+  });
 
   if (loading) {
     return (
@@ -159,24 +88,16 @@ export function NftSimulatorTab({
         </p>
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <SimulatorPicker
           boosts={boostOptions}
-          selectedBoostId={selection.boostId}
-          enabled={selection.enabled}
-          overridePriceFlw={selection.overridePriceFlw}
-          onSelectBoost={(boostId) =>
-            setSelection((prev) => ({
-              ...prev,
-              boostId,
-              enabled: true,
-            }))
-          }
-          onToggleEnabled={() =>
-            setSelection((prev) => ({ ...prev, enabled: !prev.enabled }))
-          }
+          selectedBoostId={selectedAssetKey ?? null}
+          enabled={params.enabled}
+          overridePriceFlw={params.overridePriceFlw}
+          onSelectBoost={(boostId) => selectAsset(boostId)}
+          onToggleEnabled={() => setParams({ enabled: !params.enabled })}
           onChangeOverridePrice={(overridePriceFlw) =>
-            setSelection((prev) => ({ ...prev, overridePriceFlw }))
+            setParams({ overridePriceFlw })
           }
         />
 
@@ -184,9 +105,9 @@ export function NftSimulatorTab({
           impact={impact}
           selectedBoost={selectedBoost}
           categoryBreakdown={simulatorCategories}
-          enabled={selection.enabled}
+          enabled={params.enabled}
         />
-      </div>
+      </section>
     </article>
   );
 }
