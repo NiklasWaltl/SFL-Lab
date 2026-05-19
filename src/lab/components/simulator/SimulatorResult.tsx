@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import type { Boost } from "../../types";
 import type { CategoryValue } from "../../types/categories";
 import type { SimulatorImpact } from "../../types/simulator";
-import { CATEGORY_META } from "../../utils/categoryBreakdown";
+import { CATEGORY_BY_KEY } from "../../config/categories.config";
 import { deltaColorClass, formatDelta, formatNumber } from "../../utils/format";
 import { getBoostAffectedCategoryKeys } from "../../utils/simulator";
 
@@ -30,7 +30,7 @@ function getInsightMessage(
 
   const { keys } = getBoostAffectedCategoryKeys(selectedBoost);
   const labels = keys
-    .map((k) => CATEGORY_META[k]?.label ?? k)
+    .map((k) => CATEGORY_BY_KEY[k]?.label ?? k)
     .filter((l) => l !== "Netto");
 
   if (labels.length > 0) {
@@ -58,7 +58,7 @@ export function SimulatorResult({
 
     if (entries.length > 0) {
       return entries.map(([key, delta]) => {
-        const meta = CATEGORY_META[key as keyof typeof CATEGORY_META];
+        const meta = CATEGORY_BY_KEY[key as CategoryValue["key"]];
         const fromList = categoryBreakdown.find((c) => c.key === key);
         const estimated = impact.estimatedCategoryKeys?.includes(
           key as CategoryValue["key"],
@@ -80,7 +80,7 @@ export function SimulatorResult({
       .filter((k) => k !== "net")
       .map((key) => ({
         key,
-        label: CATEGORY_META[key].label,
+        label: CATEGORY_BY_KEY[key].label,
         delta: impact.totalDelta,
         estimated: true,
         status: categoryBreakdown.find((c) => c.key === key)?.status,

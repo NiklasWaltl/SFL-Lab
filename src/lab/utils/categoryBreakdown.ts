@@ -6,24 +6,9 @@ import type {
   ResourceConfig,
   ResourceResult,
 } from "../types";
-import type { Category, CategoryKey, CategoryValue } from "../types/categories";
-import { CATEGORIES } from "../config/categories.config";
+import type { CategoryKey, CategoryValue } from "../types/categories";
+import { CATEGORIES, CATEGORY_BY_KEY } from "../config/categories.config";
 import { calculateBoostMarginalProfit } from "./calculations";
-
-const CATEGORY_BY_KEY = Object.fromEntries(
-  CATEGORIES.map((category) => [category.key, category]),
-) as Record<CategoryKey, Category>;
-
-/** Label/description lookup derived from {@link CATEGORIES} (SimulatorResult). */
-export const CATEGORY_META: Record<
-  CategoryKey,
-  Pick<Category, "label" | "description">
-> = Object.fromEntries(
-  CATEGORIES.map((category) => [
-    category.key,
-    { label: category.label, description: category.description },
-  ]),
-) as Record<CategoryKey, Pick<Category, "label" | "description">>;
 
 const PLACEHOLDER_KEYS: CategoryKey[] = CATEGORIES.filter(
   (category) => category.defaultStatus === "placeholder",
