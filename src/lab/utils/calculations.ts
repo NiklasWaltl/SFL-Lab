@@ -19,11 +19,16 @@ export function cyclesPerDay(recoveryMinutes: number): number {
 }
 
 /** Berechnet effektiven Yield pro Node nach Boosts */
-export function effectiveYield(baseYield: number, boosts: Boost[], resourceId: string): number {
+export function effectiveYield(
+  baseYield: number,
+  boosts: Boost[],
+  resourceId: string,
+): number {
   let additive = 0;
   let multiplier = 0;
   for (const b of boosts) {
-    if (b.affectsResource !== resourceId && b.affectsResource !== "all") continue;
+    if (b.affectsResource !== resourceId && b.affectsResource !== "all")
+      continue;
     if (b.type === "addYield") additive += b.value;
     if (b.type === "multiplyYield") multiplier += b.value;
   }
@@ -31,20 +36,30 @@ export function effectiveYield(baseYield: number, boosts: Boost[], resourceId: s
 }
 
 /** Berechnet effektive Tool-Kosten in Coins nach Rabatten */
-export function effectiveToolCostCoins(baseCost: number, boosts: Boost[], resourceId: string): number {
+export function effectiveToolCostCoins(
+  baseCost: number,
+  boosts: Boost[],
+  resourceId: string,
+): number {
   let discount = 0;
   for (const b of boosts) {
-    if (b.affectsResource !== resourceId && b.affectsResource !== "all") continue;
+    if (b.affectsResource !== resourceId && b.affectsResource !== "all")
+      continue;
     if (b.type === "reduceToolCost") discount += b.value;
   }
   return baseCost * (1 - Math.min(discount, 0.99));
 }
 
 /** Berechnet effektive Recovery-Zeit in Minuten nach Reduktionen */
-export function effectiveRecovery(baseMinutes: number, boosts: Boost[], resourceId: string): number {
+export function effectiveRecovery(
+  baseMinutes: number,
+  boosts: Boost[],
+  resourceId: string,
+): number {
   let reduction = 0;
   for (const b of boosts) {
-    if (b.affectsResource !== resourceId && b.affectsResource !== "all") continue;
+    if (b.affectsResource !== resourceId && b.affectsResource !== "all")
+      continue;
     if (b.type === "reduceRecovery") reduction += b.value;
   }
   return baseMinutes * (1 - Math.min(reduction, 0.99));
@@ -57,25 +72,40 @@ export function effectiveRecovery(baseMinutes: number, boosts: Boost[], resource
 export function calculateResource(
   config: ResourceConfig,
   params: GlobalParams,
-  activeBoosts: Boost[]
+  activeBoosts: Boost[],
 ): ResourceResult {
-  const recovery = effectiveRecovery(config.recoveryMinutes, activeBoosts, config.id);
+  const recovery = effectiveRecovery(
+    config.recoveryMinutes,
+    activeBoosts,
+    config.id,
+  );
   const cycles = cyclesPerDay(recovery);
-  const yieldPerNode = effectiveYield(config.yieldPerNode, activeBoosts, config.id);
-  const toolCostCoins = effectiveToolCostCoins(config.toolCostCoins, activeBoosts, config.id);
+  const yieldPerNode = effectiveYield(
+    config.yieldPerNode,
+    activeBoosts,
+    config.id,
+  );
+  const toolCostCoins = effectiveToolCostCoins(
+    config.toolCostCoins,
+    activeBoosts,
+    config.id,
+  );
 
   const productionPerDay = config.nodeCount * cycles * yieldPerNode;
 
   // Tool-Kosten: 1 Tool pro Node pro Zyklus (Durability = 1)
   const toolsPerDay = (config.nodeCount * cycles) / config.toolDurability;
   const coinCostPerDay = toolsPerDay * toolCostCoins;
-  const woodCostPerDay = config.toolCostWood ? toolsPerDay * config.toolCostWood : undefined;
+  const woodCostPerDay = config.toolCostWood
+    ? toolsPerDay * config.toolCostWood
+    : undefined;
 
   // Flower-Kosten (Coins → Flower)
   const flwCostPerDay = coinCostPerDay / params.coinToFlowerRatio;
 
   // P2P Revenue & Profit
-  const marketPrice = config.id === "wood" ? params.marketPriceWood : params.marketPriceStone;
+  const marketPrice =
+    config.id === "wood" ? params.marketPriceWood : params.marketPriceStone;
   const p2pRevenueFlw = productionPerDay * marketPrice * 0.9; // -10% P2P Fee
   const p2pProfitFlw = p2pRevenueFlw - flwCostPerDay;
 
@@ -98,9 +128,10 @@ export function calculateResource(
 export function calculateDelta(
   baseline: ResourceResult,
   experiment: ResourceResult,
-  nftPrice?: number
+  nftPrice?: number,
 ): ExperimentDelta {
-  const productionDelta = experiment.productionPerDay - baseline.productionPerDay;
+  const productionDelta =
+    experiment.productionPerDay - baseline.productionPerDay;
   const profitDelta = experiment.p2pProfitFlw - baseline.p2pProfitFlw;
 
   let breakEvenDays: number | null = null;
@@ -114,4 +145,76 @@ export function calculateDelta(
     profitDelta,
     breakEvenDays,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Aktive Boosts (Ist vs. Experiment)
+// ---------------------------------------------------------------------------
+
+/** Ist: nur owned. Experiment: owned + per Toggle aktivierte !owned Boosts */
+export function getActiveBoosts(
+  boosts: Boost[],
+  experimentBoostIds: ReadonlySet<string>,
+  mode: "actual" | "experiment",
+): Boost[] {
+  const owned = boosts.filter((b) => b.owned);
+  if (mode === "actual") return owned;
+
+  const experimental = boosts.filter(
+    (b) => !b.owned && experimentBoostIds.has(b.id),
+  );
+  return [...owned, ...experimental];
+}
+
+/** Summe der FLW-Preise experimentell aktivierter, nicht-owned Boosts */
+export function sumExperimentBoostPrices(
+  boosts: Boost[],
+  experimentBoostIds: ReadonlySet<string>,
+): number {
+  return boosts
+    .filter((b) => !b.owned && experimentBoostIds.has(b.id) && b.priceFlw)
+    .reduce((sum, b) => sum + (b.priceFlw ?? 0), 0);
+}
+
+/** Marginaler P2P-Gewinn/Tag durch Aktivierung eines einzelnen Boosts */
+export function calculateBoostMarginalProfit(
+  boost: Boost,
+  configs: ResourceConfig[],
+  params: GlobalParams,
+  baseActiveBoosts: Boost[],
+): number {
+  const withBoost = [...baseActiveBoosts, boost];
+  let marginal = 0;
+
+  for (const config of configs) {
+    if (
+      boost.affectsResource !== config.id &&
+      boost.affectsResource !== "all"
+    ) {
+      continue;
+    }
+    const baseline = calculateResource(config, params, baseActiveBoosts);
+    const boosted = calculateResource(config, params, withBoost);
+    marginal += boosted.p2pProfitFlw - baseline.p2pProfitFlw;
+  }
+
+  return marginal;
+}
+
+/** Break-even in Tagen für einen einzelnen Boost (null wenn nicht berechenbar) */
+export function calculateBoostBreakEvenDays(
+  boost: Boost,
+  configs: ResourceConfig[],
+  params: GlobalParams,
+  baseActiveBoosts: Boost[],
+): number | null {
+  if (!boost.priceFlw) return null;
+  const marginal = calculateBoostMarginalProfit(
+    boost,
+    configs,
+    params,
+    baseActiveBoosts,
+  );
+  if (marginal <= 0) return null;
+  return Math.ceil(boost.priceFlw / marginal);
 }
