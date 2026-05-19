@@ -1,7 +1,7 @@
 // SFL-Lab – Portfolio-Tab
 // Zeigt eigene NFTs/Boosts als Portfolio-Positionen mit wirtschaftlicher Analyse
 import React, { useCallback, useMemo, useState } from "react";
-import { useScenarioPersistence } from "../hooks/useScenarioPersistence";
+import type { useScenarioPersistence } from "../hooks/useScenarioPersistence";
 import type {
   Boost,
   GlobalParams,
@@ -21,6 +21,7 @@ interface PortfolioTabProps {
   loading: boolean;
   isMock: boolean;
   error: string | null;
+  scenarioPersistence: ReturnType<typeof useScenarioPersistence>;
 }
 
 function flw(v: number | null, decimals = 2): string {
@@ -258,9 +259,9 @@ export function PortfolioTab({
   loading,
   isMock,
   error,
+  scenarioPersistence,
 }: PortfolioTabProps) {
-  const { scenarios, activeScenarioId, saveScenario } =
-    useScenarioPersistence();
+  const { scenarios, activeScenarioId, saveScenario } = scenarioPersistence;
 
   const activeScenario = useMemo(
     () => scenarios.find((s) => s.id === activeScenarioId) ?? scenarios[0],

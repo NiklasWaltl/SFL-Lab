@@ -3,11 +3,13 @@ import { LabTabNav, TABS, type TabId } from "../components/LabTabNav";
 import { TabPlaceholder } from "../components/TabPlaceholder";
 import { useLabState, type LabMode } from "../hooks/useLabState";
 import { usePlayerData } from "../hooks/usePlayerData";
+import { useScenarioPersistence } from "../hooks/useScenarioPersistence";
 import { normalizeFarm } from "../utils/normalizePlayer";
 import { CategoriesTab } from "./CategoriesTab";
 import { NftSimulatorTab } from "./NftSimulatorTab";
 import { OverviewTab } from "./OverviewTab";
 import { PortfolioTab } from "./PortfolioTab";
+import { ScenariosTab } from "./ScenariosTab";
 
 function ModeToggle({
   mode,
@@ -59,6 +61,7 @@ function formatFetchedAt(date: Date | null): string {
 export function LabPage() {
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const lab = useLabState();
+  const scenarioPersistence = useScenarioPersistence();
   const { playerData, loading, error, isMock, fetchedAt } = usePlayerData();
 
   const farm = useMemo(
@@ -165,13 +168,19 @@ export function LabPage() {
               loading={loading}
               isMock={isMock}
               error={error}
+              scenarioPersistence={scenarioPersistence}
             />
+          )}
+
+          {activeTab === "scenarios" && (
+            <ScenariosTab scenarioPersistence={scenarioPersistence} />
           )}
 
           {activeTab !== "overview" &&
             activeTab !== "categories" &&
             activeTab !== "nft-simulator" &&
-            activeTab !== "portfolio" && (
+            activeTab !== "portfolio" &&
+            activeTab !== "scenarios" && (
               <TabPlaceholder label={activeTabLabel} />
             )}
         </main>
