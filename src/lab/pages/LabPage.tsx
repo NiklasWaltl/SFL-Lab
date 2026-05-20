@@ -13,11 +13,15 @@ import { ScenariosTab } from "./ScenariosTab";
 
 function ModeToggle({
   mode,
+  activeBoostCount,
   onChange,
 }: {
   mode: LabMode;
+  activeBoostCount: number;
   onChange: (mode: LabMode) => void;
 }) {
+  const showExperimentBadge = activeBoostCount > 0 && mode === "actual";
+
   return (
     <div
       className="inline-flex rounded-lg border border-[#3e2731]/60 bg-[#0f0d1a] p-1"
@@ -38,13 +42,24 @@ function ModeToggle({
       <button
         type="button"
         onClick={() => onChange("experiment")}
-        className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+        title={
+          showExperimentBadge
+            ? `${activeBoostCount} Experiment-Boost(s) aktiv`
+            : undefined
+        }
+        className={`relative rounded-md px-4 py-2 text-sm font-medium transition-colors ${
           mode === "experiment"
             ? "bg-amber-600/80 text-white"
             : "text-gray-400 hover:text-[#ead4aa]"
         }`}
       >
         {"Experiment"}
+        {showExperimentBadge && (
+          <span className="absolute -right-1 -top-1 flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
+          </span>
+        )}
       </button>
     </div>
   );
@@ -98,7 +113,11 @@ export function LabPage() {
                 {formatFetchedAt(fetchedAt)}
               </p>
             </div>
-            <ModeToggle mode={lab.mode} onChange={lab.setMode} />
+            <ModeToggle
+              mode={lab.mode}
+              activeBoostCount={lab.experimentBoostIds.size}
+              onChange={lab.setMode}
+            />
           </div>
 
           <LabTabNav activeTab={activeTab} onTabChange={setActiveTab} />
@@ -129,6 +148,7 @@ export function LabPage() {
 
           {activeTab === "categories" && (
             <CategoriesTab
+              mode={lab.mode}
               farm={farm}
               actualResults={lab.actualResults}
               experimentResults={lab.experimentResults}

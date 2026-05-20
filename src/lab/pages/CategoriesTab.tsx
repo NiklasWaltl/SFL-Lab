@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { CategoryCard } from "../components/categories/CategoryCard";
 import { CategoryDetails } from "../components/categories/CategoryDetails";
 import { CATEGORIES } from "../config/categories.config";
+import type { LabMode } from "../hooks/useLabState";
 import type {
   Boost,
   CategoryDetailContext,
@@ -17,6 +18,7 @@ import { getCategorySummary } from "../utils/categorySummary";
 import { deltaColorClass, formatDelta, formatNumber } from "../utils/format";
 
 export interface CategoriesTabProps {
+  mode: LabMode;
   farm: NormalizedFarm | null;
   actualResults: ResourceResult[];
   experimentResults: ResourceResult[];
@@ -32,6 +34,7 @@ export interface CategoriesTabProps {
 }
 
 export function CategoriesTab({
+  mode,
   farm,
   actualResults,
   experimentResults,
@@ -46,6 +49,7 @@ export function CategoriesTab({
   experimentActiveBoosts,
 }: CategoriesTabProps) {
   const [expandedKey, setExpandedKey] = useState<CategoryKey | null>(null);
+  const isExperimentView = mode === "experiment";
 
   const categories = useMemo(
     () =>
@@ -136,7 +140,11 @@ export function CategoriesTab({
         <h2 className="mb-3 text-lg font-semibold text-[#ead4aa]">
           {"Einordnung"}
         </h2>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div
+          className={`grid gap-3 ${
+            isExperimentView ? "sm:grid-cols-3" : "sm:grid-cols-2"
+          }`}
+        >
           <SummaryItem
             label="Stärkste Kategorie"
             value={
@@ -153,11 +161,13 @@ export function CategoriesTab({
                 : "—"
             }
           />
-          <SummaryItem
-            label="Gesamt-Delta (Netto)"
-            value={formatDelta(summary.totalDelta)}
-            valueClassName={deltaColorClass(summary.totalDelta)}
-          />
+          {isExperimentView && (
+            <SummaryItem
+              label="Gesamt-Delta (Netto)"
+              value={formatDelta(summary.totalDelta)}
+              valueClassName={deltaColorClass(summary.totalDelta)}
+            />
+          )}
         </div>
       </section>
 
@@ -172,6 +182,7 @@ export function CategoriesTab({
               <li key={category.key} className="flex flex-col">
                 <CategoryCard
                   category={category}
+                  isExperimentView={isExperimentView}
                   expanded={isExpanded}
                   onToggleExpand={() =>
                     setExpandedKey(isExpanded ? null : category.key)
@@ -184,6 +195,7 @@ export function CategoriesTab({
                     actualResults={actualResults}
                     experimentResults={experimentResults}
                     allCategories={orderedCategories}
+                    isExperimentView={isExperimentView}
                   />
                 )}
               </li>

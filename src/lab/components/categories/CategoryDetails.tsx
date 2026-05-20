@@ -18,6 +18,7 @@ interface CategoryDetailsProps {
   actualResults: ResourceResult[];
   experimentResults: ResourceResult[];
   allCategories: CategoryValue[];
+  isExperimentView: boolean;
 }
 
 const PLACEHOLDER_KEYS = new Set(["crops", "animals", "crafting", "trading"]);
@@ -28,6 +29,7 @@ export function CategoryDetails({
   actualResults,
   experimentResults,
   allCategories,
+  isExperimentView,
 }: CategoryDetailsProps) {
   if (PLACEHOLDER_KEYS.has(category.key)) {
     return (
@@ -47,10 +49,14 @@ export function CategoryDetails({
           actualResults={actualResults}
           experimentResults={experimentResults}
           resources={detailContext.resources}
+          isExperimentView={isExperimentView}
         />
       )}
       {category.key === "boosts" && (
-        <BoostDetails detailContext={detailContext} />
+        <BoostDetails
+          detailContext={detailContext}
+          isExperimentView={isExperimentView}
+        />
       )}
       {category.key === "costs" && (
         <CostDetails
@@ -58,9 +64,15 @@ export function CategoryDetails({
           experimentResults={experimentResults}
           globalParams={detailContext.globalParams}
           resources={detailContext.resources}
+          isExperimentView={isExperimentView}
         />
       )}
-      {category.key === "net" && <NetDetails categories={allCategories} />}
+      {category.key === "net" && (
+        <NetDetails
+          categories={allCategories}
+          isExperimentView={isExperimentView}
+        />
+      )}
     </div>
   );
 }
@@ -69,10 +81,12 @@ function ResourceDetails({
   actualResults,
   experimentResults,
   resources,
+  isExperimentView,
 }: {
   actualResults: ResourceResult[];
   experimentResults: ResourceResult[];
   resources: CategoryDetailContext["resources"];
+  isExperimentView: boolean;
 }) {
   const lines = getResourceDetailLines(
     actualResults,
@@ -89,6 +103,7 @@ function ResourceDetails({
           actual={line.actual}
           experiment={line.experiment}
           delta={line.delta}
+          isExperimentView={isExperimentView}
         />
       ))}
     </DetailList>
@@ -97,15 +112,17 @@ function ResourceDetails({
 
 function BoostDetails({
   detailContext,
+  isExperimentView,
 }: {
   detailContext: CategoryDetailContext;
+  isExperimentView: boolean;
 }) {
   const lines = getBoostDetailLines(
     detailContext.resources,
     detailContext.globalParams,
     detailContext.actualActiveBoosts,
     detailContext.experimentActiveBoosts,
-  );
+  ).filter((line) => isExperimentView || line.marginalActual !== null);
 
   if (lines.length === 0) {
     return <p className="text-sm text-gray-400">{"Keine aktiven Boosts"}</p>;
@@ -133,7 +150,7 @@ function BoostDetails({
               >
                 {line.boost.source}
               </span>
-              {line.isExperimentOnly && (
+              {isExperimentView && line.isExperimentOnly && (
                 <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-xs text-amber-300">
                   {"Experiment"}
                 </span>
@@ -147,7 +164,7 @@ function BoostDetails({
                   {" FLW/Tag"}
                 </span>
               )}
-              {line.marginalExperiment !== null && (
+              {isExperimentView && line.marginalExperiment !== null && (
                 <span className={line.marginalActual !== null ? " ml-3" : ""}>
                   {"Exp: "}
                   {formatNumber(line.marginalExperiment)}
@@ -167,22 +184,22 @@ function CostDetails({
   experimentResults,
   globalParams,
   resources,
+  isExperimentView,
 }: {
   actualResults: ResourceResult[];
   experimentResults: ResourceResult[];
   globalParams: CategoryDetailContext["globalParams"];
   resources: CategoryDetailContext["resources"];
+  isExperimentView: boolean;
 }) {
   const actualLines = getCostDetailLines(
     actualResults,
     globalParams,
     resources,
   );
-  const experimentLines = getCostDetailLines(
-    experimentResults,
-    globalParams,
-    resources,
-  );
+  const experimentLines = isExperimentView
+    ? getCostDetailLines(experimentResults, globalParams, resources)
+    : [];
 
   return (
     <DetailList title="Kostentreiber">
@@ -209,9 +226,14 @@ function CostDetails({
             <p className="mt-1 text-sm text-gray-300">
               {"Ist gesamt: "}
               {formatNumber(line.total)}
-              {" FLW/Tag · Experiment: "}
-              {formatNumber(expLine?.total ?? 0)}
               {" FLW/Tag"}
+              {isExperimentView && (
+                <>
+                  {" · Experiment: "}
+                  {formatNumber(expLine?.total ?? 0)}
+                  {" FLW/Tag"}
+                </>
+              )}
             </p>
           </li>
         );
@@ -220,7 +242,13 @@ function CostDetails({
   );
 }
 
-function NetDetails({ categories }: { categories: CategoryValue[] }) {
+function NetDetails({
+  categories,
+  isExperimentView,
+}: {
+  categories: CategoryValue[];
+  isExperimentView: boolean;
+}) {
   const lines = getNetDetailLines(categories);
 
   return (
@@ -243,9 +271,14 @@ function NetDetails({ categories }: { categories: CategoryValue[] }) {
             </span>
             <span className="text-[#ead4aa]">
               {formatNumber(line.actual)}
-              {" / "}
-              {formatNumber(line.experiment)}
               {" FLW/Tag"}
+              {isExperimentView && (
+                <>
+                  {" / "}
+                  {formatNumber(line.experiment)}
+                  {" FLW/Tag"}
+                </>
+              )}
             </span>
           </li>
         ))}
@@ -276,21 +309,28 @@ function DetailRow({
   actual,
   experiment,
   delta,
+  isExperimentView,
 }: {
   label: string;
   actual: number;
   experiment: number;
   delta: number;
+  isExperimentView: boolean;
 }) {
   return (
     <li className="flex flex-wrap items-center justify-between gap-2 text-sm">
       <span className="text-[#ead4aa]">{label}</span>
       <span className="text-gray-300">
         {formatNumber(actual)}
-        {" / "}
-        {formatNumber(experiment)}
-        {" FLW/Tag · "}
-        <span className={deltaColorClass(delta)}>{formatDelta(delta)}</span>
+        {" FLW/Tag"}
+        {isExperimentView && (
+          <>
+            {" / "}
+            {formatNumber(experiment)}
+            {" FLW/Tag · "}
+            <span className={deltaColorClass(delta)}>{formatDelta(delta)}</span>
+          </>
+        )}
       </span>
     </li>
   );

@@ -4,6 +4,7 @@ import { deltaColorClass, formatDelta, formatNumber } from "../../utils/format";
 
 interface CategoryCardProps {
   category: CategoryValue;
+  isExperimentView: boolean;
   expanded?: boolean;
   onToggleExpand?: () => void;
 }
@@ -22,6 +23,7 @@ const STATUS_BADGE_CLASS: Record<CategoryValue["status"], string> = {
 
 export function CategoryCard({
   category,
+  isExperimentView,
   expanded = false,
   onToggleExpand,
 }: CategoryCardProps) {
@@ -56,20 +58,28 @@ export function CategoryCard({
         )}
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-2 text-center sm:gap-4">
+      <div
+        className={`mt-4 grid gap-2 text-center sm:gap-4 ${
+          isExperimentView ? "grid-cols-3" : "grid-cols-1"
+        }`}
+      >
         <ValueColumn label="Ist" value={category.actual} />
-        <ValueColumn label="Experiment" value={category.experiment} />
-        <div>
-          <p className="text-xs uppercase tracking-wide text-gray-500">
-            {"Delta"}
-          </p>
-          <p
-            className={`mt-1 text-sm font-semibold sm:text-base ${deltaColorClass(category.delta)}`}
-          >
-            {formatDelta(category.delta)}
-          </p>
-          <p className="text-xs text-gray-500">{"FLW/Tag"}</p>
-        </div>
+        {isExperimentView && (
+          <ValueColumn label="Experiment" value={category.experiment} />
+        )}
+        {isExperimentView && (
+          <div>
+            <p className="text-xs uppercase tracking-wide text-gray-500">
+              {"Delta"}
+            </p>
+            <p
+              className={`mt-1 text-sm font-semibold sm:text-base ${deltaColorClass(category.delta)}`}
+            >
+              {formatDelta(category.delta)}
+            </p>
+            <p className="text-xs text-gray-500">{"FLW/Tag"}</p>
+          </div>
+        )}
       </div>
 
       {category.shareOfTotal !== undefined && (
