@@ -1,7 +1,6 @@
 export type ResourcePrices = Record<string, number>;
 
-export const MARKET_RATES_URL =
-  "https://api.sunflower-land.com/community/trades/rates";
+export const MARKET_RATES_URL = "/api/market";
 
 function toResourcePrices(obj: Record<string, unknown>): ResourcePrices {
   const result: ResourcePrices = {};

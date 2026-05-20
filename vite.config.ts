@@ -126,6 +126,17 @@ export default defineConfig(() => {
       modules: {},
     },
     base: "./",
+    // Dev-only CORS bypass for yarn dev / yarn dev:lab.
+    // Production + `netlify dev`: netlify.toml rewrites /api/market → market-prices function.
+    server: {
+      proxy: {
+        "/api/market": {
+          target: "https://api.sunflower-land.com",
+          changeOrigin: true,
+          rewrite: () => "/community/trades/rates",
+        },
+      },
+    },
     build: {
       chunkSizeWarningLimit: 1000,
       assetsDir: "assets",

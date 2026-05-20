@@ -118,6 +118,7 @@
     "xstate": "^4.33.1"
   },
   "devDependencies": {
+    "@netlify/functions": "^2.8.2",
     "@aws-sdk/client-translate": "^3.637.0",
     "@rsbuild/core": "^1.4.5",
     "@rsbuild/plugin-node-polyfill": "^1.4.2",

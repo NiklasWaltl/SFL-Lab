@@ -14,6 +14,7 @@ Das Hauptfeature ist ein **Experiment-Modus**: Nutzer können NFTs und Skills si
 - Stack: React, TypeScript, rsbuild + Vite, Tailwind CSS, Dark Mode
 - Eigener Code lebt ausschließlich in: `src/lab/`
 - Dev-Einstieg: `yarn dev:lab` (Port 3001, Entry `src/lab/index.html`)
+- Marktpreise lokal mit Netlify-Parität: `netlify dev` (leitet `/api/market` an `netlify/functions/market-prices` weiter; ohne Netlify CLI nutzt nur `yarn dev:lab` den Vite-Proxy auf die SFL-API)
 - Lokal verifiziert: `yarn dev` läuft auf http://localhost:3000/ (SFL-Original)
 - Aktives Testnet: `VITE_NETWORK=mumbai` (Fallback: `amoy` wenn Wallet-Probleme)
 
@@ -153,6 +154,15 @@ npx eslint src/lab/ --ext .ts,.tsx
 - Ohne JWT: Mock-Farm (`farmId: 7762677082636687`), gelbes Banner
 - Mit JWT: `GET {VITE_API_URL}/portal/{VITE_PORTAL_APP}/player`
 - API-Fehler: rotes Banner, kein stilles Fallback auf Mock
+- Marktpreise: Frontend ruft `GET /api/market` auf. Netlify-Deploy: Rewrite → `market-prices` Function (öffentliche SFL-Endpunkte, kein JWT). Bei 503 bleibt manuelle Eingabe im UI aktiv.
+
+### Marktpreise (Dev vs. Produktion)
+
+| Modus          | `/api/market`                                                |
+| -------------- | ------------------------------------------------------------ |
+| `yarn dev:lab` | Vite-Proxy → `api.sunflower-land.com/community/trades/rates` |
+| `netlify dev`  | Netlify-Function `market-prices` (wie Produktion)            |
+| Netlify-Deploy | Function + `Cache-Control: public, max-age=300`              |
 
 ---
 
