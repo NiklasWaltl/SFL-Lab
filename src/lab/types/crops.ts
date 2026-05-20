@@ -23,6 +23,8 @@ export type CropName =
   | "Turnip"
   | "Artichoke";
 
+export type CropKey = CropName;
+
 export interface CropConfig {
   name: CropName;
   label: string;
@@ -31,7 +33,7 @@ export interface CropConfig {
   harvestMinutes: number;
 }
 
-export type CropPriceSource = "market" | "missing";
+export type CropPriceSource = "live" | "manual" | "missing";
 
 export interface CropCalculationLine {
   cropName: CropName;

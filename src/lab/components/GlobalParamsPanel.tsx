@@ -1,5 +1,6 @@
 import React from "react";
-import type { GlobalParams } from "../types";
+import { CROP_CONFIGS } from "../config/crops";
+import type { CropKey, GlobalParams } from "../types";
 
 export interface MarketPricesState {
   loading: boolean;
@@ -78,6 +79,27 @@ function ParamField({
       <span className="text-xs text-gray-400">{hint}</span>
     </label>
   );
+}
+
+function updateCropPrice(
+  cropPrices: GlobalParams["cropPrices"],
+  cropKey: CropKey,
+  rawValue: string,
+): GlobalParams["cropPrices"] {
+  const next = { ...cropPrices };
+
+  if (rawValue.trim() === "") {
+    delete next[cropKey];
+    return next;
+  }
+
+  const parsed = Number(rawValue);
+
+  if (Number.isFinite(parsed) && parsed >= 0) {
+    next[cropKey] = parsed;
+  }
+
+  return next;
 }
 
 export function GlobalParamsPanel({
@@ -190,6 +212,49 @@ export function GlobalParamsPanel({
           </div>
         </div>
       )}
+
+      <details className="mt-4 rounded-lg border border-[#3e2731]/40 bg-[#0f0d1a]/50 p-3">
+        <summary className="cursor-pointer text-sm font-semibold text-[#ead4aa]">
+          {"Crop-Marktpreise (manuell)"}
+        </summary>
+        <p className="mt-2 text-xs text-gray-400">
+          {
+            "Leere Felder zählen als kein Preis und bleiben in der Crop-Berechnung ausgeklammert."
+          }
+        </p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {CROP_CONFIGS.map((crop) => {
+            const cropKey = crop.name;
+            const value = params.cropPrices[cropKey];
+
+            return (
+              <label key={cropKey} className="flex flex-col gap-1">
+                <span className="text-sm font-medium text-[#ead4aa]">
+                  {crop.label}
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  step="0.0001"
+                  placeholder="FLW/Crop"
+                  value={value ?? ""}
+                  onChange={(e) =>
+                    onChange(
+                      "cropPrices",
+                      updateCropPrice(
+                        params.cropPrices,
+                        cropKey,
+                        e.target.value,
+                      ),
+                    )
+                  }
+                  className="rounded-lg border border-[#3e2731]/60 bg-[#0f0d1a] px-3 py-2 text-sm text-white focus:border-amber-500/60 focus:outline-none focus:ring-1 focus:ring-amber-500/40"
+                />
+              </label>
+            );
+          })}
+        </div>
+      </details>
 
       {!marketPricesState && (
         <div className="mt-4 grid gap-4 sm:grid-cols-2">

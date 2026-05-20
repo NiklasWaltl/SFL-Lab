@@ -130,6 +130,7 @@ function CropDetails({
   const lines = getCropDetailLines(
     detailContext.farm,
     detailContext.marketPrices,
+    detailContext.globalParams.cropPrices,
     detailContext.actualActiveBoosts,
     detailContext.experimentActiveBoosts,
   );
@@ -168,6 +169,11 @@ function CropDetails({
                   <>
                     {formatNumber(line.priceFlw)}
                     {" FLW/Stk."}
+                    {line.priceSource === "manual" && (
+                      <span className="ml-2 rounded bg-amber-500/20 px-1.5 py-0.5 text-amber-200">
+                        {"Manueller Preis"}
+                      </span>
+                    )}
                   </>
                 )}
               </p>
@@ -318,6 +324,7 @@ function CostDetails({
   const cropLines = getCropDetailLines(
     detailContext.farm,
     detailContext.marketPrices,
+    detailContext.globalParams.cropPrices,
     detailContext.actualActiveBoosts,
     detailContext.experimentActiveBoosts,
   );

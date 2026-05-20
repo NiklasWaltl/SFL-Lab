@@ -117,11 +117,13 @@ export function getCategoryBreakdown(
   const cropsActual = calculateCropBreakdown(
     farm,
     marketPrices,
+    globalParams.cropPrices,
     actualActiveBoosts,
   );
   const cropsExperiment = calculateCropBreakdown(
     farm,
     marketPrices,
+    globalParams.cropPrices,
     experimentActiveBoosts,
   );
 

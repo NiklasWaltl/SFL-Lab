@@ -17,6 +17,7 @@ const DEFAULT_GLOBAL_PARAMS: GlobalParams = {
   coinToFlowerRatio: 1000,
   marketPriceWood: 0.05,
   marketPriceStone: 0.08,
+  cropPrices: {},
 };
 
 function cloneBoosts(boosts: Boost[]): Boost[] {

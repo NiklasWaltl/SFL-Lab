@@ -1,3 +1,5 @@
+import type { CropKey } from "./crops";
+
 // SFL-Lab – zentrale TypeScript-Typen
 // Alle Typen für den Experiment-Modus und Ist-Zustand werden hier definiert
 
@@ -8,6 +10,7 @@ export interface GlobalParams {
   coinToFlowerRatio: number; // Coins pro 1 FLW
   marketPriceWood: number; // FLW pro 1 Wood (P2P)
   marketPriceStone: number; // FLW pro 1 Stone (P2P)
+  cropPrices: Partial<Record<CropKey, number>>; // Manuelle FLW-Preise pro Crop
 }
 
 // ---------------------------------------------------------------------------
@@ -113,6 +116,7 @@ export type {
   CropCalculationLine,
   CropConfig,
   CropDetailLine,
+  CropKey,
   CropName,
   CropPriceSource,
 } from "./crops";

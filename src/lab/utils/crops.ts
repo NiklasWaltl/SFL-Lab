@@ -6,6 +6,7 @@ import type {
   CropCalculationLine,
   CropConfig,
   CropDetailLine,
+  CropKey,
   CropName,
   MarketPriceMap,
   NormalizedFarm,
@@ -25,13 +26,35 @@ function isCropName(name: string | undefined): name is CropName {
 function getCropPrice(
   config: CropConfig,
   marketPrices: MarketPriceMap,
-): number | null {
-  const price =
+  manualCropPrices: Partial<Record<CropKey, number>>,
+): {
+  priceFlw: number | null;
+  priceSource: CropCalculationLine["priceSource"];
+} {
+  const livePrice =
     marketPrices[config.marketKey] ??
     marketPrices[config.marketKey.toLowerCase()] ??
     null;
 
-  return typeof price === "number" && Number.isFinite(price) ? price : null;
+  if (
+    typeof livePrice === "number" &&
+    Number.isFinite(livePrice) &&
+    livePrice >= 0
+  ) {
+    return { priceFlw: livePrice, priceSource: "live" };
+  }
+
+  const manualPrice = manualCropPrices[config.name];
+
+  if (
+    typeof manualPrice === "number" &&
+    Number.isFinite(manualPrice) &&
+    manualPrice >= 0
+  ) {
+    return { priceFlw: manualPrice, priceSource: "manual" };
+  }
+
+  return { priceFlw: null, priceSource: "missing" };
 }
 
 function cropBoostApplies(effect: BoostEffect, cropName: CropName): boolean {
@@ -116,6 +139,7 @@ function aggregateCropPlots(cropPlots: PlayerCropPlot[]): CropAggregate[] {
 export function calculateCropBreakdown(
   farm: NormalizedFarm | null,
   marketPrices: MarketPriceMap,
+  manualCropPrices: Partial<Record<CropKey, number>>,
   activeBoosts: Boost[],
 ): CropBreakdown {
   const aggregates = aggregateCropPlots(farm?.cropPlots ?? []);
@@ -128,8 +152,11 @@ export function calculateCropBreakdown(
       boosted.plotCount * boosted.yieldPerCycle * cyclesPerDay;
     const seedCostPerDay =
       boosted.plotCount * cyclesPerDay * aggregate.config.seedCostFlw;
-    const priceFlw = getCropPrice(aggregate.config, marketPrices);
-    const priceSource = priceFlw === null ? "missing" : "market";
+    const { priceFlw, priceSource } = getCropPrice(
+      aggregate.config,
+      marketPrices,
+      manualCropPrices,
+    );
     const revenueFlw = priceFlw === null ? null : productionPerDay * priceFlw;
     const netFlw = revenueFlw === null ? null : revenueFlw - seedCostPerDay;
 
@@ -159,13 +186,20 @@ export function calculateCropBreakdown(
 export function getCropDetailLines(
   farm: NormalizedFarm | null,
   marketPrices: MarketPriceMap,
+  manualCropPrices: Partial<Record<CropKey, number>>,
   actualActiveBoosts: Boost[],
   experimentActiveBoosts: Boost[],
 ): CropDetailLine[] {
-  const actual = calculateCropBreakdown(farm, marketPrices, actualActiveBoosts);
+  const actual = calculateCropBreakdown(
+    farm,
+    marketPrices,
+    manualCropPrices,
+    actualActiveBoosts,
+  );
   const experiment = calculateCropBreakdown(
     farm,
     marketPrices,
+    manualCropPrices,
     experimentActiveBoosts,
   );
   const actualByName = new Map(
