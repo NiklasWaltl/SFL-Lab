@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { fetchPlayerData, getMockPlayerData } from "../services/playerApi";
+import { fetchPublicFarmData, getMockPlayerData } from "../services/playerApi";
 import type { PlayerData } from "../types";
-import { useJwt } from "./useJwt";
+import { useFarmId } from "./useFarmId";
 
 export interface UsePlayerDataResult {
-  jwt: string | null;
-  setJwt: (token: string | null) => void;
+  farmId: number | null;
+  setFarmId: (id: number | null) => void;
   playerData: PlayerData | null;
   loading: boolean;
   error: string | null;
@@ -14,7 +14,7 @@ export interface UsePlayerDataResult {
 }
 
 export function usePlayerData(): UsePlayerDataResult {
-  const { jwt, setJwt } = useJwt();
+  const { farmId, setFarmId } = useFarmId();
   const [playerData, setPlayerData] = useState<PlayerData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +28,7 @@ export function usePlayerData(): UsePlayerDataResult {
       setLoading(true);
       setError(null);
 
-      if (!jwt) {
+      if (!farmId) {
         if (!cancelled) {
           setPlayerData(getMockPlayerData());
           setIsMock(true);
@@ -39,7 +39,7 @@ export function usePlayerData(): UsePlayerDataResult {
       }
 
       try {
-        const data = await fetchPlayerData(jwt);
+        const data = await fetchPublicFarmData(farmId);
         if (!cancelled) {
           setPlayerData(data);
           setIsMock(false);
@@ -62,7 +62,7 @@ export function usePlayerData(): UsePlayerDataResult {
     return () => {
       cancelled = true;
     };
-  }, [jwt]);
+  }, [farmId]);
 
-  return { jwt, setJwt, playerData, loading, error, isMock, fetchedAt };
+  return { farmId, setFarmId, playerData, loading, error, isMock, fetchedAt };
 }

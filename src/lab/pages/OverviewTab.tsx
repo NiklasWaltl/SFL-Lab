@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { BoostPanel } from "../components/BoostPanel";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { FarmIdInput } from "../components/FarmIdInput";
 import { GlobalParamsPanel } from "../components/GlobalParamsPanel";
-import { JwtInput } from "../components/JwtInput";
 import { ResourceCard } from "../components/ResourceCard";
 import { CategoryPreview } from "../components/overview/CategoryPreview";
 import { KpiRow } from "../components/overview/KpiRow";
@@ -22,8 +22,8 @@ import { useMarketPrices } from "../hooks/useMarketPrices";
 import { computeOverviewKpis } from "../utils/overviewKpis";
 
 export interface OverviewTabProps {
-  jwt: string | null;
-  setJwt: (token: string | null) => void;
+  farmId: number | null;
+  setFarmId: (id: number | null) => void;
   mode: LabMode;
   farm: NormalizedFarm | null;
   actualResults: ResourceResult[];
@@ -49,8 +49,8 @@ export interface OverviewTabProps {
 }
 
 export function OverviewTab({
-  jwt,
-  setJwt,
+  farmId,
+  setFarmId,
   mode,
   farm,
   actualResults,
@@ -130,10 +130,10 @@ export function OverviewTab({
   if (loading) {
     return (
       <article className="flex flex-col gap-6">
-        <JwtInput
-          jwt={jwt}
-          onSubmit={(token) => setJwt(token)}
-          onClear={() => setJwt(null)}
+        <FarmIdInput
+          farmId={farmId}
+          onSubmit={(id) => setFarmId(id)}
+          onClear={() => setFarmId(null)}
         />
         <section className="flex min-h-[200px] items-center justify-center rounded-xl border border-[#3e2731]/40 bg-[#181425] p-8">
           <p className="text-gray-400">{"Farmdaten werden geladen…"}</p>
@@ -144,10 +144,10 @@ export function OverviewTab({
 
   return (
     <article className="flex flex-col gap-6">
-      <JwtInput
-        jwt={jwt}
-        onSubmit={(token) => setJwt(token)}
-        onClear={() => setJwt(null)}
+      <FarmIdInput
+        farmId={farmId}
+        onSubmit={(id) => setFarmId(id)}
+        onClear={() => setFarmId(null)}
       />
 
       {isMock && (
@@ -155,7 +155,7 @@ export function OverviewTab({
           className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200"
           role="status"
         >
-          {"Keine echten Farmdaten – JWT fehlt in URL"}
+          {"Keine echten Farmdaten – Farm-ID fehlt"}
         </p>
       )}
 

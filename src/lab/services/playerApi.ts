@@ -7,6 +7,14 @@ export function getJwtFromUrl(): string | null {
   return new URLSearchParams(window.location.search).get("jwt");
 }
 
+export function getFarmIdFromUrl(): number | null {
+  const farmId = new URLSearchParams(window.location.search).get("farmId");
+  if (!farmId) return null;
+
+  const parsedFarmId = Number(farmId);
+  return Number.isFinite(parsedFarmId) ? parsedFarmId : null;
+}
+
 export function getApiUrl(): string {
   const network = new URLSearchParams(window.location.search).get("network");
 
@@ -103,6 +111,19 @@ export async function fetchPlayerData(jwt: string): Promise<PlayerData> {
       Authorization: `Bearer ${jwt}`,
     },
   });
+
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status}`);
+  }
+
+  const data: unknown = await res.json();
+  return mapPortalResponse(data);
+}
+
+export async function fetchPublicFarmData(farmId: number): Promise<PlayerData> {
+  const res = await fetch(
+    `https://api.sunflower-land.com/community/farms/${farmId}`,
+  );
 
   if (!res.ok) {
     throw new Error(`API error: ${res.status}`);

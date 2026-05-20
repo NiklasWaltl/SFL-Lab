@@ -78,7 +78,7 @@ export function LabPage() {
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const lab = useLabState();
   const scenarioPersistence = useScenarioPersistence();
-  const { jwt, setJwt, playerData, loading, error, isMock, fetchedAt } =
+  const { farmId, setFarmId, playerData, loading, error, isMock, fetchedAt } =
     usePlayerData();
 
   const farm = useMemo(
@@ -137,8 +137,8 @@ export function LabPage() {
         <main>
           {activeTab === "overview" && (
             <OverviewTab
-              jwt={jwt}
-              setJwt={setJwt}
+              farmId={farmId}
+              setFarmId={setFarmId}
               mode={lab.mode}
               farm={farm}
               actualResults={lab.actualResults}
