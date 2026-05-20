@@ -134,21 +134,49 @@ export async function fetchPlayerData(jwt: string): Promise<PlayerData> {
   return mapPortalResponse(data);
 }
 
+function parseJsonResponse(text: string, contentType: string): unknown {
+  const isJson =
+    contentType.includes("application/json") || text.trim().startsWith("{");
+
+  if (!isJson) {
+    throw new Error(
+      "Server antwortete mit HTML statt JSON. Dev: `yarn dev:lab` neu starten (Proxy /api/farm). Deploy: `netlify dev` oder Netlify-Redirect prüfen.",
+    );
+  }
+
+  return JSON.parse(text) as unknown;
+}
+
 export async function fetchPublicFarmData(
   farmId: number,
   apiKey: string,
 ): Promise<PlayerData> {
   const res = await fetch(`/api/farm/${farmId}`, {
     headers: {
+      Accept: "application/json",
       "x-api-key": apiKey,
     },
   });
 
+  const text = await res.text();
+  const contentType = res.headers.get("content-type") ?? "";
+
   if (!res.ok) {
-    throw new Error(`API error: ${res.status}`);
+    let message = `API error: ${res.status}`;
+    try {
+      const errBody = parseJsonResponse(text, contentType) as {
+        error?: string;
+      };
+      if (typeof errBody.error === "string") {
+        message = errBody.error;
+      }
+    } catch {
+      // Non-JSON error body (e.g. HTML from missing proxy).
+    }
+    throw new Error(message);
   }
 
-  const data: unknown = await res.json();
+  const data = parseJsonResponse(text, contentType);
   return mapPortalResponse(data);
 }
 

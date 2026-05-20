@@ -13,6 +13,8 @@ export default defineConfig({
   server: {
     host: true,
     port: 3001,
+    // Fail loudly if 3001 is taken (stale dev server without /api/farm proxy).
+    strictPort: true,
     proxy: {
       "/api/market": {
         target: "https://api.sunflower-land.com",

@@ -14,7 +14,7 @@ function parseFarmId(value: string | undefined): number | null {
 
 export const handler: Handler = async (event) => {
   const farmId = parseFarmId(event.queryStringParameters?.id);
-  const apiKey = event.headers["x-api-key"];
+  const apiKey = event.headers["x-api-key"] ?? event.headers["X-Api-Key"];
 
   if (!farmId) {
     return {
