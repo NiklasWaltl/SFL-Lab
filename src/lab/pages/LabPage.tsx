@@ -177,6 +177,7 @@ export function LabPage() {
               actualResults={lab.actualResults}
               experimentResults={lab.experimentResults}
               deltas={lab.deltas}
+              playerData={playerData}
               loading={loading}
               isMock={isMock}
               error={error}
