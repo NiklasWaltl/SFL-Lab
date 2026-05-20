@@ -101,7 +101,10 @@ export function calculateResource(
     : undefined;
 
   // Flower-Kosten (Coins → Flower)
-  const flwCostPerDay = coinCostPerDay / params.coinToFlowerRatio;
+  const flwCostPerDay =
+    params.coinToFlowerRatio > 0
+      ? coinCostPerDay / params.coinToFlowerRatio
+      : 0;
 
   // P2P Revenue & Profit
   const marketPrice =
@@ -136,7 +139,8 @@ export function calculateDelta(
 
   let breakEvenDays: number | null = null;
   if (nftPrice && profitDelta > 0) {
-    breakEvenDays = Math.ceil(nftPrice / profitDelta);
+    const raw = Math.ceil(nftPrice / profitDelta);
+    breakEvenDays = Number.isFinite(raw) && raw > 0 ? raw : null;
   }
 
   return {
@@ -215,6 +219,7 @@ export function calculateBoostBreakEvenDays(
     params,
     baseActiveBoosts,
   );
-  if (marginal <= 0) return null;
-  return Math.ceil(boost.priceFlw / marginal);
+  if (!Number.isFinite(marginal) || marginal <= 0) return null;
+  const raw = Math.ceil(boost.priceFlw / marginal);
+  return Number.isFinite(raw) && raw > 0 ? raw : null;
 }

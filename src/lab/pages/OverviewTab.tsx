@@ -13,10 +13,12 @@ import type {
   ResourceConfig,
   ResourceResult,
 } from "../types";
+import type { LabMode } from "../hooks/useLabState";
 import { useMarketPrices } from "../hooks/useMarketPrices";
 import { computeOverviewKpis } from "../utils/overviewKpis";
 
 export interface OverviewTabProps {
+  mode: LabMode;
   farm: NormalizedFarm | null;
   actualResults: ResourceResult[];
   experimentResults: ResourceResult[];
@@ -39,6 +41,7 @@ export interface OverviewTabProps {
 }
 
 export function OverviewTab({
+  mode,
   farm,
   actualResults,
   experimentResults,
@@ -106,6 +109,8 @@ export function OverviewTab({
   const woodConfig = resources.find((r) => r.id === "wood");
   const stoneConfig = resources.find((r) => r.id === "stone");
 
+  const isExperimentView = mode === "experiment";
+
   if (loading) {
     return (
       <section className="flex min-h-[200px] items-center justify-center rounded-xl border border-[#3e2731]/40 bg-[#181425] p-8">
@@ -137,6 +142,7 @@ export function OverviewTab({
       <KpiRow
         farm={farm}
         kpis={kpis}
+        mode={mode}
         ownedBoostCount={ownedBoostCount}
         experimentBoostCount={experimentBoostCount}
       />
@@ -153,12 +159,13 @@ export function OverviewTab({
               mode="actual"
             />
           )}
-          {woodExperiment && (
+          {isExperimentView && woodExperiment && (
             <ResourceCard
               title={`${woodConfig?.label ?? "Wood"} (Experiment)`}
               result={woodExperiment}
               delta={woodDelta}
               mode="experiment"
+              showDelta={isExperimentView}
             />
           )}
           {stoneActual && (
@@ -168,12 +175,13 @@ export function OverviewTab({
               mode="actual"
             />
           )}
-          {stoneExperiment && (
+          {isExperimentView && stoneExperiment && (
             <ResourceCard
               title={`${stoneConfig?.label ?? "Stone"} (Experiment)`}
               result={stoneExperiment}
               delta={stoneDelta}
               mode="experiment"
+              showDelta={isExperimentView}
             />
           )}
         </section>

@@ -107,6 +107,7 @@ export function LabPage() {
         <main>
           {activeTab === "overview" && (
             <OverviewTab
+              mode={lab.mode}
               farm={farm}
               actualResults={lab.actualResults}
               experimentResults={lab.experimentResults}

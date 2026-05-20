@@ -10,6 +10,7 @@ import type {
   ResourceResult,
   ScenarioPortfolioData,
 } from "../types";
+import { formatBreakEven } from "../utils/format";
 import { buildPortfolioPositions } from "../utils/portfolioCalc";
 
 interface PortfolioTabProps {
@@ -27,13 +28,6 @@ interface PortfolioTabProps {
 function flw(v: number | null, decimals = 2): string {
   if (v === null) return "—";
   return v.toFixed(decimals) + " FLW";
-}
-
-function fmtDays(v: number | null): string {
-  if (v === null) return "—";
-  if (v >= 365) return Math.round(v / 365) + " J";
-  if (v >= 30) return Math.round(v / 30) + " Mon";
-  return v + " Tage";
 }
 
 function RoiBadge({ roi }: { roi: number | null }) {
@@ -70,9 +64,8 @@ function BreakEvenBar({
         <span>{"Break-even Fortschritt"}</span>
         <span>
           {daysSince}
-          {" / "}
-          {breakEvenDays}
-          {" Tage"}
+          {" Tage / "}
+          {formatBreakEven(breakEvenDays)}
         </span>
       </div>
       <div className="h-1.5 w-full rounded-full bg-gray-700">
@@ -160,8 +153,8 @@ function PositionCard({
         />
         <Metric
           label="Break-even"
-          value={fmtDays(pos.breakEvenDays)}
-          sub={pos.breakEvenDays ? "Tage bis Amortisation" : undefined}
+          value={formatBreakEven(pos.breakEvenDays)}
+          sub={pos.breakEvenDays ? "bis Amortisation" : undefined}
         />
       </div>
 

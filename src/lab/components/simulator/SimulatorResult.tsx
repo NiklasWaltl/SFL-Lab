@@ -1,7 +1,12 @@
 import React, { useMemo } from "react";
 import type { Boost, CategoryValue, SimulatorImpact } from "../../types";
 import { CATEGORY_BY_KEY } from "../../config/categories.config";
-import { deltaColorClass, formatDelta, formatNumber } from "../../utils/format";
+import {
+  deltaColorClass,
+  formatBreakEven,
+  formatDelta,
+  formatNumber,
+} from "../../utils/format";
 import { getBoostAffectedCategoryKeys } from "../../utils/simulator";
 
 export interface SimulatorResultProps {
@@ -147,10 +152,7 @@ export function SimulatorResult({
               value={
                 !enabled || !selectedBoost
                   ? "—"
-                  : impact.breakEvenDays !== null &&
-                      impact.breakEvenDays !== undefined
-                    ? `${impact.breakEvenDays} Tage`
-                    : "Nicht berechenbar"
+                  : formatBreakEven(impact.breakEvenDays ?? null)
               }
               highlight
             />

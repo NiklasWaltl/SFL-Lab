@@ -4,7 +4,7 @@ import {
   calculateBoostBreakEvenDays,
   calculateBoostMarginalProfit,
 } from "../utils/calculations";
-import { formatNumber } from "../utils/format";
+import { formatBreakEven, formatNumber } from "../utils/format";
 
 interface BoostPanelProps {
   boosts: Boost[];
@@ -121,8 +121,7 @@ function ExperimentBoostRow({
         {breakEven !== null && (
           <span className="text-sm text-amber-300">
             {"Break-even: "}
-            {breakEven}
-            {" Tage"}
+            {formatBreakEven(breakEven)}
           </span>
         )}
         {!boost.owned && (

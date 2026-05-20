@@ -1,12 +1,19 @@
 import React from "react";
 import type { ExperimentDelta, ResourceResult } from "../types";
 import type { LabMode } from "../hooks/useLabState";
-import { deltaColorClass, formatDelta, formatNumber } from "../utils/format";
+import {
+  deltaColorClass,
+  formatBreakEven,
+  formatDelta,
+  formatNumber,
+} from "../utils/format";
 
 interface ResourceCardProps {
   result: ResourceResult;
   delta?: ExperimentDelta;
   mode: LabMode;
+  /** Delta-Block nur bei globalem Experiment-Ansichtsmodus */
+  showDelta?: boolean;
   title?: string;
 }
 
@@ -34,6 +41,7 @@ export function ResourceCard({
   result,
   delta,
   mode,
+  showDelta = false,
   title,
 }: ResourceCardProps) {
   const isExperiment = mode === "experiment";
@@ -87,7 +95,7 @@ export function ResourceCard({
         />
       </div>
 
-      {isExperiment && delta && (
+      {showDelta && delta && (
         <div className="mt-4 border-t border-[#3e2731]/40 pt-4">
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500">
             {"Delta vs. Ist"}
@@ -111,8 +119,7 @@ export function ResourceCard({
               <div className="flex justify-between">
                 <span className="text-gray-400">{"Break-even"}</span>
                 <span className="text-amber-300">
-                  {delta.breakEvenDays}
-                  {" Tage"}
+                  {formatBreakEven(delta.breakEvenDays)}
                 </span>
               </div>
             )}

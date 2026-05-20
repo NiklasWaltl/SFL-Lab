@@ -6,6 +6,7 @@ export interface OverviewKpis {
   totalProfitPerDay: number;
   simulatedProfitPerDay: number;
   nftProfitDelta: number;
+  nftProductionDelta: number;
   woodProfitPerDay: number;
   stoneProfitPerDay: number;
 }
@@ -37,6 +38,10 @@ export function computeOverviewKpis(
   );
 
   const nftProfitDelta = deltas.reduce((sum, d) => sum + d.profitDelta, 0);
+  const nftProductionDelta = deltas.reduce(
+    (sum, d) => sum + d.productionDelta,
+    0,
+  );
 
   const wood = actualResults.find((r) => r.resourceId === "wood");
   const stone = actualResults.find((r) => r.resourceId === "stone");
@@ -47,6 +52,7 @@ export function computeOverviewKpis(
     totalProfitPerDay,
     simulatedProfitPerDay,
     nftProfitDelta,
+    nftProductionDelta,
     woodProfitPerDay: wood?.p2pProfitFlw ?? 0,
     stoneProfitPerDay: stone?.p2pProfitFlw ?? 0,
   };

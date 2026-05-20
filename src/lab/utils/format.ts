@@ -10,6 +10,16 @@ export function formatDelta(n: number): string {
   return formatNumber(0);
 }
 
+/** Lesbare Break-even-Dauer */
+export function formatBreakEven(days: number | null): string {
+  if (days === null || !Number.isFinite(days) || days <= 0) return "—";
+  if (days <= 1) return "< 1 Tag";
+  if (days < 7) return `${days} Tage`;
+  if (days < 30) return `~${Math.round(days / 7)} Wochen`;
+  if (days < 365) return `~${Math.round(days / 30)} Monate`;
+  return `~${Math.round(days / 365)} Jahre`;
+}
+
 /** Tailwind-Klasse für Delta-Farbe */
 export function deltaColorClass(n: number): string {
   if (n > 0) return "text-green-400";
