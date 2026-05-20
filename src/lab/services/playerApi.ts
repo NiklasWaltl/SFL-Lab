@@ -111,6 +111,7 @@ export function mapPortalResponse(raw: unknown): PlayerData {
 
   return {
     farmId,
+    nftId: typeof root.nft_id === "number" ? root.nft_id : undefined,
     balance: typeof farm.balance === "string" ? farm.balance : undefined,
     coins: typeof farm.coins === "number" ? farm.coins : undefined,
     bumpkin,
@@ -188,6 +189,7 @@ export async function fetchPublicFarmData(
 export function getMockPlayerData(): PlayerData {
   return {
     farmId: 7762677082636687,
+    nftId: 12345,
     balance: "42.5",
     coins: 5000,
     inventory: {

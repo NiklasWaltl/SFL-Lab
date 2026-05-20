@@ -8,6 +8,7 @@ export interface Bumpkin {
 
 export interface PlayerData {
   farmId: number;
+  nftId?: number; // NFT-Token-ID der Farm auf der Blockchain
   balance?: string;
   coins?: number;
   bumpkin?: Bumpkin;

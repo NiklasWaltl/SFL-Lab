@@ -6,6 +6,7 @@ import { GlobalParamsPanel } from "../components/GlobalParamsPanel";
 import { ResourceCard } from "../components/ResourceCard";
 import { CategoryPreview } from "../components/overview/CategoryPreview";
 import { KpiRow } from "../components/overview/KpiRow";
+import { SFL_FARM_NFT_CONTRACT_ADDRESS } from "../config/constants";
 import type {
   Boost,
   ExperimentDelta,
@@ -13,6 +14,7 @@ import type {
   GlobalParams,
   NormalizedFarm,
   NftBoost,
+  PlayerData,
   ResourceConfig,
   ResourceResult,
   SkillBoost,
@@ -27,6 +29,7 @@ export interface OverviewTabProps {
   apiKey: string | null;
   setApiKey: (key: string | null) => void;
   mode: LabMode;
+  playerData: PlayerData | null;
   farm: NormalizedFarm | null;
   actualResults: ResourceResult[];
   experimentResults: ResourceResult[];
@@ -56,6 +59,7 @@ export function OverviewTab({
   apiKey,
   setApiKey,
   mode,
+  playerData,
   farm,
   actualResults,
   experimentResults,
@@ -184,6 +188,19 @@ export function OverviewTab({
         >
           {error}
         </p>
+      )}
+
+      {playerData?.nftId && (
+        <a
+          href={`https://opensea.io/assets/matic/${SFL_FARM_NFT_CONTRACT_ADDRESS}/${playerData.nftId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-fit rounded-lg border border-[#3e2731]/60 bg-[#181425] px-4 py-2 text-sm font-medium text-amber-200 transition-colors hover:border-amber-400/60 hover:text-amber-100"
+        >
+          {"NFT #"}
+          {playerData.nftId}
+          {" →"}
+        </a>
       )}
 
       <KpiRow

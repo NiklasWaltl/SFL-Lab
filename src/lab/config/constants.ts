@@ -1,0 +1,2 @@
+export const SFL_FARM_NFT_CONTRACT_ADDRESS =
+  "0x6e5fa679211d7f6b54e14e187d34ba547c5d3fe0";

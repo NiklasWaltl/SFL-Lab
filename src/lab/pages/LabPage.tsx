@@ -148,6 +148,7 @@ export function LabPage() {
               apiKey={apiKey}
               setApiKey={setApiKey}
               mode={lab.mode}
+              playerData={playerData}
               farm={farm}
               actualResults={lab.actualResults}
               experimentResults={lab.experimentResults}
