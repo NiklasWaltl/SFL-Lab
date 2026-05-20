@@ -113,7 +113,7 @@ export function LabPage() {
               <h1 className="text-2xl font-bold tracking-tight text-[#ead4aa] sm:text-3xl">
                 {"SFL-Lab"}
               </h1>
-              {farm && (
+              {!isMock && playerData && farm && (
                 <p className="mt-1 text-sm text-gray-300">
                   {"Farm #"}
                   {farm.farmId}

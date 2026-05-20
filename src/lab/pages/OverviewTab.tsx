@@ -134,6 +134,7 @@ export function OverviewTab({
   const stoneConfig = resources.find((r) => r.id === "stone");
 
   const isExperimentView = mode === "experiment";
+  const displayFarm = !isMock && playerData?.farmId ? farm : null;
 
   if (loading) {
     return (
@@ -190,7 +191,7 @@ export function OverviewTab({
         </p>
       )}
 
-      {playerData?.nftId && (
+      {!isMock && playerData?.nftId && (
         <a
           href={`https://opensea.io/assets/matic/${SFL_FARM_NFT_CONTRACT_ADDRESS}/${playerData.nftId}`}
           target="_blank"
@@ -203,61 +204,67 @@ export function OverviewTab({
         </a>
       )}
 
-      <KpiRow
-        farm={farm}
-        kpis={kpis}
-        mode={mode}
-        ownedBoostCount={ownedBoostCount}
-        experimentBoostCount={experimentBoostCount}
-        pricesAreLive={pricesAreLive}
-        pricesLastUpdated={pricesLastUpdated}
-      />
+      {displayFarm && (
+        <KpiRow
+          farm={displayFarm}
+          kpis={kpis}
+          mode={mode}
+          ownedBoostCount={ownedBoostCount}
+          experimentBoostCount={experimentBoostCount}
+          pricesAreLive={pricesAreLive}
+          pricesLastUpdated={pricesLastUpdated}
+        />
+      )}
 
-      <section aria-label="Ist vs. Experiment">
-        <h2 className="mb-3 text-lg font-semibold text-[#ead4aa]">
-          {"Ist vs. Experiment"}
-        </h2>
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {woodActual && (
-            <ResourceCard
-              title={`${woodConfig?.label ?? "Wood"} (Ist)`}
-              result={woodActual}
-              mode="actual"
-            />
-          )}
-          {isExperimentView && woodExperiment && (
-            <ResourceCard
-              title={`${woodConfig?.label ?? "Wood"} (Experiment)`}
-              result={woodExperiment}
-              delta={woodDelta}
-              mode="experiment"
-              showDelta={isExperimentView}
-            />
-          )}
-          {stoneActual && (
-            <ResourceCard
-              title={`${stoneConfig?.label ?? "Stone"} (Ist)`}
-              result={stoneActual}
-              mode="actual"
-            />
-          )}
-          {isExperimentView && stoneExperiment && (
-            <ResourceCard
-              title={`${stoneConfig?.label ?? "Stone"} (Experiment)`}
-              result={stoneExperiment}
-              delta={stoneDelta}
-              mode="experiment"
-              showDelta={isExperimentView}
-            />
-          )}
+      {displayFarm && (
+        <section aria-label="Ist vs. Experiment">
+          <h2 className="mb-3 text-lg font-semibold text-[#ead4aa]">
+            {"Ist vs. Experiment"}
+          </h2>
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {woodActual && (
+              <ResourceCard
+                title={`${woodConfig?.label ?? "Wood"} (Ist)`}
+                result={woodActual}
+                mode="actual"
+              />
+            )}
+            {isExperimentView && woodExperiment && (
+              <ResourceCard
+                title={`${woodConfig?.label ?? "Wood"} (Experiment)`}
+                result={woodExperiment}
+                delta={woodDelta}
+                mode="experiment"
+                showDelta={isExperimentView}
+              />
+            )}
+            {stoneActual && (
+              <ResourceCard
+                title={`${stoneConfig?.label ?? "Stone"} (Ist)`}
+                result={stoneActual}
+                mode="actual"
+              />
+            )}
+            {isExperimentView && stoneExperiment && (
+              <ResourceCard
+                title={`${stoneConfig?.label ?? "Stone"} (Experiment)`}
+                result={stoneExperiment}
+                delta={stoneDelta}
+                mode="experiment"
+                showDelta={isExperimentView}
+              />
+            )}
+          </section>
         </section>
-      </section>
+      )}
 
-      <CategoryPreview
-        kpis={kpis}
-        ownedBoostCount={ownedBoostCount}
-        experimentBoostCount={experimentBoostCount}
-      />
+      {displayFarm && (
+        <CategoryPreview
+          kpis={kpis}
+          ownedBoostCount={ownedBoostCount}
+          experimentBoostCount={experimentBoostCount}
+        />
+      )}
 
       <section aria-label="Simulator" className="flex flex-col gap-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
