@@ -115,6 +115,24 @@ export function mapPortalResponse(raw: unknown): PlayerData {
     balance: typeof farm.balance === "string" ? farm.balance : undefined,
     coins: typeof farm.coins === "number" ? farm.coins : undefined,
     bumpkin,
+    resources: {
+      trees:
+        farm.trees && typeof farm.trees === "object"
+          ? Object.keys(farm.trees as object).length
+          : undefined,
+      stones:
+        farm.stones && typeof farm.stones === "object"
+          ? Object.keys(farm.stones as object).length
+          : undefined,
+      iron:
+        farm.iron && typeof farm.iron === "object"
+          ? Object.keys(farm.iron as object).length
+          : undefined,
+      gold:
+        farm.gold && typeof farm.gold === "object"
+          ? Object.keys(farm.gold as object).length
+          : undefined,
+    },
     inventory,
     buildings: buildingsSource,
     collectibles: collectiblesSource,
@@ -192,6 +210,7 @@ export function getMockPlayerData(): PlayerData {
     nftId: 12345,
     balance: "42.5",
     coins: 5000,
+    resources: { trees: 8, stones: 6, iron: 3, gold: 1 },
     inventory: {
       Wood: "530.4",
       Stone: "330",

@@ -10,6 +10,7 @@ import type {
   ExperimentDelta,
   GlobalParams,
   NormalizedFarm,
+  PlayerData,
   ResourceConfig,
   ResourceResult,
 } from "../types";
@@ -23,6 +24,7 @@ export interface CategoriesTabProps {
   actualResults: ResourceResult[];
   experimentResults: ResourceResult[];
   deltas: ExperimentDelta[];
+  playerData: PlayerData | null;
   loading: boolean;
   isMock: boolean;
   error: string | null;
@@ -39,6 +41,7 @@ export function CategoriesTab({
   actualResults,
   experimentResults,
   deltas,
+  playerData,
   loading,
   isMock,
   error,
@@ -78,6 +81,21 @@ export function CategoriesTab({
   );
 
   const summary = useMemo(() => getCategorySummary(categories), [categories]);
+
+  const resourceTiles = useMemo(() => {
+    const resourceCounts = playerData?.resources;
+    if (isMock || !resourceCounts) return [];
+
+    return [
+      { key: "trees", label: "🌲 Trees", value: resourceCounts.trees },
+      { key: "stones", label: "🪨 Stones", value: resourceCounts.stones },
+      { key: "iron", label: "⛏️ Iron", value: resourceCounts.iron },
+      { key: "gold", label: "🥇 Gold", value: resourceCounts.gold },
+    ].filter(
+      (tile): tile is { key: string; label: string; value: number } =>
+        tile.value !== undefined,
+    );
+  }, [isMock, playerData?.resources]);
 
   const orderedCategories = useMemo(() => {
     const order = new Map(
@@ -170,6 +188,27 @@ export function CategoriesTab({
           )}
         </div>
       </section>
+
+      {resourceTiles.length > 0 && (
+        <section
+          aria-label="Ressourcen-Knoten"
+          className="rounded-xl border border-[#3e2731]/40 bg-[#181425] p-4 shadow-lg"
+        >
+          <h2 className="mb-3 text-lg font-semibold text-[#ead4aa]">
+            {"Ressourcen"}
+          </h2>
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {resourceTiles.map((tile) => (
+              <li
+                key={tile.key}
+                className="rounded-lg border border-[#3e2731]/40 bg-[#0f0d1a]/60 p-3 text-sm font-semibold text-[#ead4aa]"
+              >
+                {`${tile.label}: ${tile.value}`}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section aria-label="Gewinnbereiche">
         <h2 className="mb-3 text-lg font-semibold text-[#ead4aa]">

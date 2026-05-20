@@ -12,6 +12,12 @@ export interface PlayerData {
   balance?: string;
   coins?: number;
   bumpkin?: Bumpkin;
+  resources?: {
+    trees?: number;
+    stones?: number;
+    iron?: number;
+    gold?: number;
+  };
   inventory: Record<string, string>;
   buildings?: Record<string, unknown[]>;
   collectibles?: Record<string, unknown[]>;
