@@ -57,18 +57,19 @@ export function CategoriesTab({
   const categories = useMemo(
     () =>
       getCategoryBreakdown(
-        farm,
-        actualResults,
-        experimentResults,
-        deltas,
+        isMock ? null : farm,
+        isMock ? [] : actualResults,
+        isMock ? [] : experimentResults,
+        isMock ? [] : deltas,
         globalParams,
         resources,
         boosts,
-        actualActiveBoosts,
-        experimentActiveBoosts,
+        isMock ? [] : actualActiveBoosts,
+        isMock ? [] : experimentActiveBoosts,
       ),
     [
       farm,
+      isMock,
       actualResults,
       experimentResults,
       deltas,
@@ -93,7 +94,7 @@ export function CategoriesTab({
       { key: "gold", label: "🥇 Gold", value: resourceCounts.gold },
     ].filter(
       (tile): tile is { key: string; label: string; value: number } =>
-        tile.value !== undefined,
+        tile.value !== undefined && tile.value > 0,
     );
   }, [isMock, playerData?.resources]);
 
@@ -138,7 +139,7 @@ export function CategoriesTab({
           className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200"
           role="status"
         >
-          {"Keine echten Farmdaten – JWT fehlt in URL"}
+          {"Keine echten Farmdaten – Farm-ID fehlt"}
         </p>
       )}
 
@@ -151,43 +152,45 @@ export function CategoriesTab({
         </p>
       )}
 
-      <section
-        aria-label="Kategorien-Zusammenfassung"
-        className="rounded-xl border border-[#3e2731]/40 bg-[#181425] p-4 shadow-lg"
-      >
-        <h2 className="mb-3 text-lg font-semibold text-[#ead4aa]">
-          {"Einordnung"}
-        </h2>
-        <div
-          className={`grid gap-3 ${
-            isExperimentView ? "sm:grid-cols-3" : "sm:grid-cols-2"
-          }`}
+      {!isMock && playerData && (
+        <section
+          aria-label="Kategorien-Zusammenfassung"
+          className="rounded-xl border border-[#3e2731]/40 bg-[#181425] p-4 shadow-lg"
         >
-          <SummaryItem
-            label="Stärkste Kategorie"
-            value={
-              summary.strongest
-                ? `${summary.strongest.label} (${formatNumber(summary.strongest.actual)} FLW/Tag)`
-                : "—"
-            }
-          />
-          <SummaryItem
-            label="Schwächste Kategorie"
-            value={
-              summary.weakest
-                ? `${summary.weakest.label} (${formatNumber(summary.weakest.actual)} FLW/Tag)`
-                : "—"
-            }
-          />
-          {isExperimentView && (
+          <h2 className="mb-3 text-lg font-semibold text-[#ead4aa]">
+            {"Einordnung"}
+          </h2>
+          <div
+            className={`grid gap-3 ${
+              isExperimentView ? "sm:grid-cols-3" : "sm:grid-cols-2"
+            }`}
+          >
             <SummaryItem
-              label="Gesamt-Delta (Netto)"
-              value={formatDelta(summary.totalDelta)}
-              valueClassName={deltaColorClass(summary.totalDelta)}
+              label="Stärkste Kategorie"
+              value={
+                summary.strongest
+                  ? `${summary.strongest.label} (${formatNumber(summary.strongest.actual)} FLW/Tag)`
+                  : "—"
+              }
             />
-          )}
-        </div>
-      </section>
+            <SummaryItem
+              label="Schwächste Kategorie"
+              value={
+                summary.weakest
+                  ? `${summary.weakest.label} (${formatNumber(summary.weakest.actual)} FLW/Tag)`
+                  : "—"
+              }
+            />
+            {isExperimentView && (
+              <SummaryItem
+                label="Gesamt-Delta (Netto)"
+                value={formatDelta(summary.totalDelta)}
+                valueClassName={deltaColorClass(summary.totalDelta)}
+              />
+            )}
+          </div>
+        </section>
+      )}
 
       {resourceTiles.length > 0 && (
         <section
@@ -231,8 +234,8 @@ export function CategoriesTab({
                   <CategoryDetails
                     category={category}
                     detailContext={detailContext}
-                    actualResults={actualResults}
-                    experimentResults={experimentResults}
+                    actualResults={isMock ? [] : actualResults}
+                    experimentResults={isMock ? [] : experimentResults}
                     allCategories={orderedCategories}
                     isExperimentView={isExperimentView}
                   />
