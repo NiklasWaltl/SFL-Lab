@@ -133,6 +133,7 @@ function CropDetails({
     detailContext.globalParams.cropPrices,
     detailContext.actualActiveBoosts,
     detailContext.experimentActiveBoosts,
+    detailContext.globalParams.coinToFlowerRatio,
   );
 
   if (lines.length === 0) {
@@ -327,6 +328,7 @@ function CostDetails({
     detailContext.globalParams.cropPrices,
     detailContext.actualActiveBoosts,
     detailContext.experimentActiveBoosts,
+    detailContext.globalParams.coinToFlowerRatio,
   );
   const actualCropSeedCost = cropLines.reduce(
     (sum, line) => sum + line.actualSeedCostFlw,

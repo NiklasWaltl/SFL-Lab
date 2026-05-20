@@ -29,7 +29,10 @@ export interface CropConfig {
   name: CropName;
   label: string;
   marketKey: CropName;
-  seedCostFlw: number;
+  // seedCostCoins: offizieller Seed-Shop-Preis in Coins
+  // Quelle: sunflower-land/src/features/game/types/crops.ts (CROP_SEEDS[x].price)
+  // FLW-Umrechnung: seedCostCoins / coinToFlowerRatio zur Laufzeit
+  seedCostCoins: number;
   harvestMinutes: number;
 }
 

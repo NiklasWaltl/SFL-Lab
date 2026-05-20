@@ -144,6 +144,7 @@ export function calculateCropBreakdown(
   marketPrices: MarketPriceMap,
   manualCropPrices: Partial<Record<CropKey, number>>,
   activeBoosts: Boost[],
+  coinToFlowerRatio: number,
 ): CropBreakdown {
   const aggregates = aggregateCropPlots(farm?.cropPlots ?? []);
 
@@ -153,8 +154,12 @@ export function calculateCropBreakdown(
       boosted.harvestMinutes > 0 ? 1440 / boosted.harvestMinutes : 0;
     const productionPerDay =
       boosted.plotCount * boosted.yieldPerCycle * cyclesPerDay;
+    const seedCostFlwPerSeed =
+      coinToFlowerRatio > 0
+        ? aggregate.config.seedCostCoins / coinToFlowerRatio
+        : 0;
     const seedCostPerDay =
-      boosted.plotCount * cyclesPerDay * aggregate.config.seedCostFlw;
+      boosted.plotCount * cyclesPerDay * seedCostFlwPerSeed;
     const { priceFlw, priceSource } = getCropPrice(
       aggregate.config,
       marketPrices,
@@ -192,18 +197,21 @@ export function getCropDetailLines(
   manualCropPrices: Partial<Record<CropKey, number>>,
   actualActiveBoosts: Boost[],
   experimentActiveBoosts: Boost[],
+  coinToFlowerRatio: number,
 ): CropDetailLine[] {
   const actual = calculateCropBreakdown(
     farm,
     marketPrices,
     manualCropPrices,
     actualActiveBoosts,
+    coinToFlowerRatio,
   );
   const experiment = calculateCropBreakdown(
     farm,
     marketPrices,
     manualCropPrices,
     experimentActiveBoosts,
+    coinToFlowerRatio,
   );
   const actualByName = new Map(
     actual.lines.map((line) => [line.cropName, line]),
