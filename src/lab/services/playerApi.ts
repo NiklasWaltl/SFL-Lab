@@ -140,6 +140,10 @@ export function mapPortalResponse(raw: unknown): PlayerData {
         farm.fruitPatches && typeof farm.fruitPatches === "object"
           ? Object.keys(farm.fruitPatches as object).length
           : undefined,
+      chickens:
+        farm.chickens && typeof farm.chickens === "object"
+          ? Object.keys(farm.chickens as object).length
+          : undefined,
     },
     inventory,
     buildings: buildingsSource,
@@ -225,6 +229,7 @@ export function getMockPlayerData(): PlayerData {
       gold: 1,
       crops: 10,
       fruitPatches: 4,
+      chickens: 5,
     },
     inventory: {
       Wood: "530.4",

@@ -98,6 +98,7 @@ export function CategoriesTab({
         label: "🍓 Fruit Patches",
         value: resourceCounts.fruitPatches,
       },
+      { key: "chickens", label: "🐔 Chickens", value: resourceCounts.chickens },
     ].filter(
       (tile): tile is { key: string; label: string; value: number } =>
         tile.value !== undefined && tile.value > 0,
