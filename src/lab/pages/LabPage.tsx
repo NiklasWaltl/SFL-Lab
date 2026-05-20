@@ -120,6 +120,7 @@ export function LabPage() {
               boosts={lab.boosts}
               experimentBoostIds={lab.experimentBoostIds}
               toggleExperimentBoost={lab.toggleExperimentBoost}
+              onResetExperiment={lab.resetExperiment}
               actualActiveBoosts={lab.actualActiveBoosts}
               experimentActiveBoosts={lab.experimentActiveBoosts}
             />

@@ -1,5 +1,6 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { BoostPanel } from "../components/BoostPanel";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { GlobalParamsPanel } from "../components/GlobalParamsPanel";
 import { ResourceCard } from "../components/ResourceCard";
 import { CategoryPreview } from "../components/overview/CategoryPreview";
@@ -31,6 +32,7 @@ export interface OverviewTabProps {
   boosts: Boost[];
   experimentBoostIds: ReadonlySet<string>;
   toggleExperimentBoost: (id: string) => void;
+  onResetExperiment: () => void;
   actualActiveBoosts: Boost[];
   experimentActiveBoosts: Boost[];
 }
@@ -49,9 +51,12 @@ export function OverviewTab({
   boosts,
   experimentBoostIds,
   toggleExperimentBoost,
+  onResetExperiment,
   actualActiveBoosts,
   experimentActiveBoosts,
 }: OverviewTabProps) {
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+
   const kpis = useMemo(
     () =>
       computeOverviewKpis(
@@ -158,7 +163,18 @@ export function OverviewTab({
       />
 
       <section aria-label="Simulator" className="flex flex-col gap-6">
-        <h2 className="text-lg font-semibold text-[#ead4aa]">{"Simulator"}</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-[#ead4aa]">
+            {"Simulator"}
+          </h2>
+          <button
+            type="button"
+            onClick={() => setResetConfirmOpen(true)}
+            className="rounded-lg border border-[#3e2731]/60 bg-transparent px-3 py-1.5 text-sm text-gray-400 transition-colors hover:border-[#3e2731] hover:text-[#ead4aa]"
+          >
+            {"Experiment zurücksetzen"}
+          </button>
+        </div>
         <GlobalParamsPanel params={globalParams} onChange={setGlobalParam} />
         <BoostPanel
           boosts={boosts}
@@ -170,6 +186,20 @@ export function OverviewTab({
           onToggleExperiment={toggleExperimentBoost}
         />
       </section>
+
+      <ConfirmDialog
+        isOpen={resetConfirmOpen}
+        title={"Experiment zurücksetzen"}
+        message={
+          "Alle aktiven Boosts werden deaktiviert und der Ansichtsmodus zurückgesetzt."
+        }
+        confirmLabel={"Zurücksetzen"}
+        onConfirm={() => {
+          onResetExperiment();
+          setResetConfirmOpen(false);
+        }}
+        onCancel={() => setResetConfirmOpen(false)}
+      />
     </article>
   );
 }
