@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { createScenario } from "../config/scenario.config";
 import type { useScenarioPersistence } from "../hooks/useScenarioPersistence";
 import type { Scenario } from "../types";
+import { exportScenario, importScenario } from "../utils/scenarioIO";
 
 interface ScenariosTabProps {
   scenarioPersistence: ReturnType<typeof useScenarioPersistence>;
@@ -23,6 +24,7 @@ interface ScenarioRowProps {
   onSaveRename: () => void;
   onCancelRename: () => void;
   onSetActive: () => void;
+  onExport: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
 }
@@ -38,6 +40,7 @@ function ScenarioRow({
   onSaveRename,
   onCancelRename,
   onSetActive,
+  onExport,
   onDuplicate,
   onDelete,
 }: ScenarioRowProps) {
@@ -125,6 +128,14 @@ function ScenarioRow({
             </button>
             <button
               type="button"
+              onClick={onExport}
+              className="rounded-md border border-[#3e2731]/60 bg-[#0f0d1a] px-2 py-1 text-xs text-gray-300 hover:text-[#ead4aa]"
+              title={"Exportieren"}
+            >
+              {"↓"}
+            </button>
+            <button
+              type="button"
               onClick={onDuplicate}
               className="rounded-md border border-[#3e2731]/60 bg-[#0f0d1a] px-2 py-1 text-xs text-gray-300 hover:text-[#ead4aa]"
             >
@@ -162,6 +173,8 @@ export function ScenariosTab({ scenarioPersistence }: ScenariosTabProps) {
     scenarioId: string;
     scenarioName: string;
   }>({ isOpen: false, scenarioId: "", scenarioName: "" });
+  const [importError, setImportError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleNew = () => {
     const created = createScenario({ name: "Neues Szenario" });
@@ -193,6 +206,39 @@ export function ScenariosTab({ scenarioPersistence }: ScenariosTabProps) {
     setConfirmState({ isOpen: false, scenarioId: "", scenarioName: "" });
   };
 
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImportFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setImportError(null);
+
+    importScenario(
+      file,
+      (importedScenario) => {
+        const idExists = scenarios.some((s) => s.id === importedScenario.id);
+        if (idExists) {
+          const imported = {
+            ...importedScenario,
+            id: crypto.randomUUID(),
+            name: `${importedScenario.name} (Import)`,
+            updatedAt: new Date().toISOString(),
+          };
+          saveScenario(imported);
+          setActiveScenarioId(imported.id);
+        } else {
+          saveScenario(importedScenario);
+          setActiveScenarioId(importedScenario.id);
+        }
+      },
+      (message) => setImportError(message),
+    );
+  };
+
   return (
     <div className="space-y-6">
       <header>
@@ -204,7 +250,7 @@ export function ScenariosTab({ scenarioPersistence }: ScenariosTabProps) {
         </p>
       </header>
 
-      <div>
+      <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
           onClick={handleNew}
@@ -212,6 +258,23 @@ export function ScenariosTab({ scenarioPersistence }: ScenariosTabProps) {
         >
           {"+ Neues Szenario"}
         </button>
+        <button
+          type="button"
+          onClick={handleImportClick}
+          className="rounded-lg border border-[#3e2731]/60 bg-[#0f0d1a] px-4 py-2 text-sm font-medium text-gray-300 hover:text-[#ead4aa] transition-colors"
+        >
+          {"+ Importieren"}
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          className="hidden"
+          onChange={handleImportFile}
+        />
+        {importError && (
+          <p className="w-full text-sm text-red-400">{importError}</p>
+        )}
       </div>
 
       {scenarios.length === 0 ? (
@@ -236,6 +299,7 @@ export function ScenariosTab({ scenarioPersistence }: ScenariosTabProps) {
                 onSaveRename={handleSaveRename}
                 onCancelRename={handleCancelRename}
                 onSetActive={() => setActiveScenarioId(scenario.id)}
+                onExport={() => exportScenario(scenario)}
                 onDuplicate={() => dupScenario(scenario.id)}
                 onDelete={() =>
                   setConfirmState({
