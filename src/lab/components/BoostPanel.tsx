@@ -163,6 +163,7 @@ export function BoostPanel({
 }: BoostPanelProps) {
   const ownedBoosts = boosts.filter((b) => b.owned);
   const grouped = groupByResource(boosts);
+  const allOwned = boosts.every((b) => b.owned);
 
   return (
     <section className="flex flex-col gap-6">
@@ -235,6 +236,13 @@ export function BoostPanel({
                 </div>
               </div>
             ))}
+            {allOwned && (
+              <p className="mt-3 text-center text-sm text-gray-500">
+                {
+                  "Alle Boosts sind bereits aktiv — keine Experiment-Simulation möglich."
+                }
+              </p>
+            )}
           </div>
         )}
       </article>

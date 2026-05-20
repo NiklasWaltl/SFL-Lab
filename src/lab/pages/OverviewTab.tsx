@@ -198,13 +198,15 @@ export function OverviewTab({
           <h2 className="text-lg font-semibold text-[#ead4aa]">
             {"Simulator"}
           </h2>
-          <button
-            type="button"
-            onClick={() => setResetConfirmOpen(true)}
-            className="rounded-lg border border-[#3e2731]/60 bg-transparent px-3 py-1.5 text-sm text-gray-400 transition-colors hover:border-[#3e2731] hover:text-[#ead4aa]"
-          >
-            {"Experiment zurücksetzen"}
-          </button>
+          {experimentBoostIds.size > 0 && (
+            <button
+              type="button"
+              onClick={() => setResetConfirmOpen(true)}
+              className="rounded-lg border border-[#3e2731]/60 bg-transparent px-3 py-1.5 text-sm text-gray-400 transition-colors hover:border-[#3e2731] hover:text-[#ead4aa]"
+            >
+              {"Experiment zurücksetzen"}
+            </button>
+          )}
         </div>
         <GlobalParamsPanel
           params={globalParams}
@@ -217,30 +219,34 @@ export function OverviewTab({
             onRefresh: refreshMarketPrices,
           }}
         />
-        <BoostPanel
-          boosts={boosts}
-          experimentBoostIds={experimentBoostIds}
-          resources={resources}
-          globalParams={globalParams}
-          actualActiveBoosts={actualActiveBoosts}
-          experimentActiveBoosts={experimentActiveBoosts}
-          onToggleExperiment={toggleExperimentBoost}
-        />
+        {isExperimentView && (
+          <BoostPanel
+            boosts={boosts}
+            experimentBoostIds={experimentBoostIds}
+            resources={resources}
+            globalParams={globalParams}
+            actualActiveBoosts={actualActiveBoosts}
+            experimentActiveBoosts={experimentActiveBoosts}
+            onToggleExperiment={toggleExperimentBoost}
+          />
+        )}
       </section>
 
-      <ConfirmDialog
-        isOpen={resetConfirmOpen}
-        title={"Experiment zurücksetzen"}
-        message={
-          "Alle aktiven Boosts werden deaktiviert und der Ansichtsmodus zurückgesetzt."
-        }
-        confirmLabel={"Zurücksetzen"}
-        onConfirm={() => {
-          onResetExperiment();
-          setResetConfirmOpen(false);
-        }}
-        onCancel={() => setResetConfirmOpen(false)}
-      />
+      {experimentBoostIds.size > 0 && (
+        <ConfirmDialog
+          isOpen={resetConfirmOpen}
+          title={"Experiment zurücksetzen"}
+          message={
+            "Alle aktiven Boosts werden deaktiviert und der Ansichtsmodus zurückgesetzt."
+          }
+          confirmLabel={"Zurücksetzen"}
+          onConfirm={() => {
+            onResetExperiment();
+            setResetConfirmOpen(false);
+          }}
+          onCancel={() => setResetConfirmOpen(false)}
+        />
+      )}
     </article>
   );
 }
