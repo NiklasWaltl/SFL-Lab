@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { createScenario } from "../config/scenario.config";
 import type { useScenarioPersistence } from "../hooks/useScenarioPersistence";
 import type { Scenario } from "../types";
@@ -148,6 +149,11 @@ export function ScenariosTab({ scenarioPersistence }: ScenariosTabProps) {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [confirmState, setConfirmState] = useState<{
+    isOpen: boolean;
+    scenarioId: string;
+    scenarioName: string;
+  }>({ isOpen: false, scenarioId: "", scenarioName: "" });
 
   const handleNew = () => {
     const created = createScenario({ name: "Neues Szenario" });
@@ -175,14 +181,8 @@ export function ScenariosTab({ scenarioPersistence }: ScenariosTabProps) {
     setEditingName("");
   };
 
-  const handleDelete = (scenario: Scenario) => {
-    const confirmed = window.confirm(`Szenario "${scenario.name}" löschen?`);
-    if (!confirmed) return;
-    deleteScenario(scenario.id);
-    if (editingId === scenario.id) {
-      setEditingId(null);
-      setEditingName("");
-    }
+  const closeConfirm = () => {
+    setConfirmState({ isOpen: false, scenarioId: "", scenarioName: "" });
   };
 
   return (
@@ -223,11 +223,32 @@ export function ScenariosTab({ scenarioPersistence }: ScenariosTabProps) {
               onCancelRename={handleCancelRename}
               onSetActive={() => setActiveScenarioId(scenario.id)}
               onDuplicate={() => dupScenario(scenario.id)}
-              onDelete={() => handleDelete(scenario)}
+              onDelete={() =>
+                setConfirmState({
+                  isOpen: true,
+                  scenarioId: scenario.id,
+                  scenarioName: scenario.name,
+                })
+              }
             />
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmState.isOpen}
+        title={"Szenario löschen"}
+        message={`Szenario "${confirmState.scenarioName}" wirklich löschen?`}
+        onConfirm={() => {
+          deleteScenario(confirmState.scenarioId);
+          if (editingId === confirmState.scenarioId) {
+            setEditingId(null);
+            setEditingName("");
+          }
+          closeConfirm();
+        }}
+        onCancel={closeConfirm}
+      />
     </div>
   );
 }
