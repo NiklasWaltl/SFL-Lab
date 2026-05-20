@@ -1,5 +1,5 @@
 import React from "react";
-import type { CategoryValue } from "../../types/categories";
+import type { CategoryValue } from "../../types";
 import { deltaColorClass, formatDelta, formatNumber } from "../../utils/format";
 
 interface CategoryCardProps {

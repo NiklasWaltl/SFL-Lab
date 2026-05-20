@@ -4,13 +4,14 @@ import { CategoryDetails } from "../components/categories/CategoryDetails";
 import { CATEGORIES } from "../config/categories.config";
 import type {
   Boost,
+  CategoryDetailContext,
+  CategoryKey,
   ExperimentDelta,
   GlobalParams,
+  NormalizedFarm,
   ResourceConfig,
   ResourceResult,
 } from "../types";
-import type { CategoryDetailContext, CategoryKey } from "../types/categories";
-import type { NormalizedFarm } from "../types/player";
 import { getCategoryBreakdown } from "../utils/categoryBreakdown";
 import { getCategorySummary } from "../utils/categorySummary";
 import { deltaColorClass, formatDelta, formatNumber } from "../utils/format";

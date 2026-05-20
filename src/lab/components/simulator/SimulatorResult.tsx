@@ -1,7 +1,5 @@
 import React, { useMemo } from "react";
-import type { Boost } from "../../types";
-import type { CategoryValue } from "../../types/categories";
-import type { SimulatorImpact } from "../../types/simulator";
+import type { Boost, CategoryValue, SimulatorImpact } from "../../types";
 import { CATEGORY_BY_KEY } from "../../config/categories.config";
 import { deltaColorClass, formatDelta, formatNumber } from "../../utils/format";
 import { getBoostAffectedCategoryKeys } from "../../utils/simulator";

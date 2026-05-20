@@ -1,9 +1,9 @@
 import React from "react";
-import type { ResourceResult } from "../../types";
 import type {
   CategoryDetailContext,
   CategoryValue,
-} from "../../types/categories";
+  ResourceResult,
+} from "../../types";
 import {
   getBoostDetailLines,
   getCostDetailLines,

@@ -1,12 +1,13 @@
-import type { NormalizedFarm } from "../types/player";
 import type {
   Boost,
+  CategoryKey,
+  CategoryValue,
   ExperimentDelta,
   GlobalParams,
+  NormalizedFarm,
   ResourceConfig,
   ResourceResult,
 } from "../types";
-import type { CategoryKey, CategoryValue } from "../types/categories";
 import { CATEGORIES, CATEGORY_BY_KEY } from "../config/categories.config";
 import { calculateBoostMarginalProfit } from "./calculations";
 

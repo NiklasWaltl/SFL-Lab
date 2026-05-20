@@ -4,7 +4,7 @@ import {
   getJwtFromUrl,
   getMockPlayerData,
 } from "../services/playerApi";
-import type { PlayerData } from "../types/player";
+import type { PlayerData } from "../types";
 
 export interface UsePlayerDataResult {
   playerData: PlayerData | null;

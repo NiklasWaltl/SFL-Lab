@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { createScenario } from "../config/scenario.config";
 import type { useScenarioPersistence } from "../hooks/useScenarioPersistence";
-import type { Scenario } from "../types/scenario";
+import type { Scenario } from "../types";
 
 interface ScenariosTabProps {
   scenarioPersistence: ReturnType<typeof useScenarioPersistence>;

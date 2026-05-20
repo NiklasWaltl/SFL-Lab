@@ -70,3 +70,24 @@ export interface ExperimentDelta {
   profitDelta: number; // +/- FLW/Tag
   breakEvenDays: number | null; // null wenn kein Kaufpreis bekannt
 }
+
+// ---------------------------------------------------------------------------
+// Re-Exports (alphabetisch nach Dateiname)
+// ---------------------------------------------------------------------------
+export type {
+  Category,
+  CategoryDetailContext,
+  CategoryKey,
+  CategoryStatus,
+  CategoryValue,
+} from "./categories";
+export type {
+  NftAsset,
+  NftSimulationParams,
+  NftSimulationResult,
+  NftSimulationSummary,
+} from "./nft";
+export type { NormalizedFarm, PlayerData } from "./player";
+export type { PortfolioPosition } from "./portfolio";
+export type { Scenario, ScenarioData, ScenarioPortfolioData } from "./scenario";
+export type { SimulatorImpact, SimulatorSelection } from "./simulator";

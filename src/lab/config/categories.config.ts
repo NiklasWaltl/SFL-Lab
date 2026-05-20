@@ -1,9 +1,9 @@
 // SFL-Lab – Gewinnbereich-Kategorien (Reihenfolge & Metadaten)
 // Neue Kategorien hier ergänzen – keine Komponente muss geändert werden
 
-import type { Category, CategoryKey } from "../types/categories";
+import type { Category, CategoryKey } from "../types";
 
-export type { Category } from "../types/categories";
+export type { Category } from "../types";
 
 export const CATEGORIES = [
   {

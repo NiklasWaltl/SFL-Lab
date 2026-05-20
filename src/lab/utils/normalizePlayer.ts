@@ -1,5 +1,5 @@
 import { getBuildingNames, getCollectibleNames } from "../services/playerApi";
-import type { NormalizedFarm, PlayerData } from "../types/player";
+import type { NormalizedFarm, PlayerData } from "../types";
 import { getBumpkinLevel } from "./bumpkinLevel";
 
 function parseBalance(inventory: Record<string, string>, key: string): number {

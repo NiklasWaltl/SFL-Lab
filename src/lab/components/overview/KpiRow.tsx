@@ -1,5 +1,5 @@
 import React from "react";
-import type { NormalizedFarm } from "../../types/player";
+import type { NormalizedFarm } from "../../types";
 import type { OverviewKpis } from "../../utils/overviewKpis";
 import { KpiCard } from "./KpiCard";
 

@@ -6,10 +6,10 @@ import type {
   Boost,
   ExperimentDelta,
   GlobalParams,
+  NormalizedFarm,
   ResourceConfig,
   ResourceResult,
 } from "../types";
-import type { NormalizedFarm } from "../types/player";
 
 export interface NftSimulatorTabProps {
   boosts: Boost[];

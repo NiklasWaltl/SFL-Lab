@@ -1,6 +1,6 @@
 // SFL-Lab – Berechnungslogik für den Portfolio-Tab (pure functions)
 import type { Boost, ResourceConfig, GlobalParams } from "../types";
-import type { PortfolioPosition } from "../types/portfolio";
+import type { PortfolioPosition } from "../types";
 import {
   calculateBoostMarginalProfit,
   calculateBoostBreakEvenDays,
@@ -12,7 +12,7 @@ export function buildPortfolioPositions(
   params: GlobalParams,
   activeBoosts: Boost[],
   purchaseDates: Record<string, string>, // boostId -> ISO date string
-  currentValues: Record<string, number>,  // boostId -> FLW
+  currentValues: Record<string, number>, // boostId -> FLW
 ): PortfolioPosition[] {
   return boosts
     .filter((b) => b.owned || b.priceFlw !== undefined)

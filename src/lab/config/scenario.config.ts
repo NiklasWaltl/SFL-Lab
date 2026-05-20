@@ -1,5 +1,5 @@
 // SFL-Lab – Szenario-Defaults und Storage-Keys
-import type { Scenario } from "../types/scenario";
+import type { Scenario } from "../types";
 
 export const SCENARIO_STORAGE_KEY = "sfl-lab.scenarios";
 export const SCENARIO_ACTIVE_ID_KEY = "sfl-lab.activeScenarioId";

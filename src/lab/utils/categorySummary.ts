@@ -1,4 +1,4 @@
-import type { CategoryKey, CategoryValue } from "../types/categories";
+import type { CategoryKey, CategoryValue } from "../types";
 
 const RANKING_KEYS: CategoryKey[] = [
   "resources",

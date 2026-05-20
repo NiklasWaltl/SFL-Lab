@@ -1,4 +1,4 @@
-import type { PlayerData } from "../types/player";
+import type { PlayerData } from "../types";
 
 const DEFAULT_API_URL = "https://api-dev.sunflower-land.com";
 const DEFAULT_PORTAL_ID = "sfl-lab";

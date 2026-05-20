@@ -1,5 +1,5 @@
 import type { Boost } from "../types";
-import type { NftAsset, NftSimulationParams } from "../types/nft";
+import type { NftAsset, NftSimulationParams } from "../types";
 
 /** Default simulation parameters for the NFT simulator tab */
 export const NFT_DEFAULT_PARAMS: Readonly<NftSimulationParams> = {

@@ -5,12 +5,12 @@ import type { useScenarioPersistence } from "../hooks/useScenarioPersistence";
 import type {
   Boost,
   GlobalParams,
+  PortfolioPosition,
   ResourceConfig,
   ResourceResult,
+  ScenarioPortfolioData,
 } from "../types";
-import type { ScenarioPortfolioData } from "../types/scenario";
 import { buildPortfolioPositions } from "../utils/portfolioCalc";
-import type { PortfolioPosition } from "../types/portfolio";
 
 interface PortfolioTabProps {
   boosts: Boost[];

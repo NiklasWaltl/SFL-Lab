@@ -6,7 +6,7 @@ import {
   createDefaultScenarios,
   createScenario,
 } from "../config/scenario.config";
-import type { Scenario, ScenarioPortfolioData } from "../types/scenario";
+import type { Scenario, ScenarioPortfolioData } from "../types";
 
 function isBrowser(): boolean {
   return typeof window !== "undefined";

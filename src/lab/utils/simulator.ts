@@ -1,6 +1,10 @@
-import type { Boost, ResourceResult } from "../types";
-import type { CategoryKey, CategoryValue } from "../types/categories";
-import type { SimulatorImpact } from "../types/simulator";
+import type {
+  Boost,
+  CategoryKey,
+  CategoryValue,
+  ResourceResult,
+  SimulatorImpact,
+} from "../types";
 
 const EMPTY_IMPACT: SimulatorImpact = {
   totalDelta: 0,

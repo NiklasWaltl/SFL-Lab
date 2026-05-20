@@ -2,18 +2,16 @@ import { useCallback, useMemo, useState } from "react";
 import { boostToNftAsset, NFT_DEFAULT_PARAMS } from "../config/nft.config";
 import type {
   Boost,
+  CategoryValue,
   GlobalParams,
-  ResourceConfig,
-  ResourceResult,
-} from "../types";
-import type { CategoryValue } from "../types/categories";
-import type {
   NftAsset,
   NftSimulationParams,
   NftSimulationResult,
-} from "../types/nft";
-import type { NormalizedFarm } from "../types/player";
-import type { SimulatorImpact } from "../types/simulator";
+  NormalizedFarm,
+  ResourceConfig,
+  ResourceResult,
+  SimulatorImpact,
+} from "../types";
 import { calculateResource } from "../utils/calculations";
 import { getCategoryBreakdown } from "../utils/categoryBreakdown";
 import {

@@ -8,10 +8,10 @@ import type {
   Boost,
   ExperimentDelta,
   GlobalParams,
+  NormalizedFarm,
   ResourceConfig,
   ResourceResult,
 } from "../types";
-import type { NormalizedFarm } from "../types/player";
 import { computeOverviewKpis } from "../utils/overviewKpis";
 
 export interface OverviewTabProps {
