@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { BoostPanel } from "../components/BoostPanel";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-import { FarmIdInput } from "../components/FarmIdInput";
+import { FarmConnectPanel } from "../components/FarmConnectPanel";
 import { GlobalParamsPanel } from "../components/GlobalParamsPanel";
 import { ResourceCard } from "../components/ResourceCard";
 import { CategoryPreview } from "../components/overview/CategoryPreview";
@@ -24,6 +24,8 @@ import { computeOverviewKpis } from "../utils/overviewKpis";
 export interface OverviewTabProps {
   farmId: number | null;
   setFarmId: (id: number | null) => void;
+  apiKey: string | null;
+  setApiKey: (key: string | null) => void;
   mode: LabMode;
   farm: NormalizedFarm | null;
   actualResults: ResourceResult[];
@@ -51,6 +53,8 @@ export interface OverviewTabProps {
 export function OverviewTab({
   farmId,
   setFarmId,
+  apiKey,
+  setApiKey,
   mode,
   farm,
   actualResults,
@@ -130,10 +134,17 @@ export function OverviewTab({
   if (loading) {
     return (
       <article className="flex flex-col gap-6">
-        <FarmIdInput
+        <FarmConnectPanel
           farmId={farmId}
-          onSubmit={(id) => setFarmId(id)}
-          onClear={() => setFarmId(null)}
+          apiKey={apiKey}
+          onSubmit={(id, key) => {
+            setFarmId(id);
+            setApiKey(key);
+          }}
+          onClear={() => {
+            setFarmId(null);
+            setApiKey(null);
+          }}
         />
         <section className="flex min-h-[200px] items-center justify-center rounded-xl border border-[#3e2731]/40 bg-[#181425] p-8">
           <p className="text-gray-400">{"Farmdaten werden geladen…"}</p>
@@ -144,10 +155,17 @@ export function OverviewTab({
 
   return (
     <article className="flex flex-col gap-6">
-      <FarmIdInput
+      <FarmConnectPanel
         farmId={farmId}
-        onSubmit={(id) => setFarmId(id)}
-        onClear={() => setFarmId(null)}
+        apiKey={apiKey}
+        onSubmit={(id, key) => {
+          setFarmId(id);
+          setApiKey(key);
+        }}
+        onClear={() => {
+          setFarmId(null);
+          setApiKey(null);
+        }}
       />
 
       {isMock && (

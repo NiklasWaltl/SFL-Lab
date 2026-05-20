@@ -55,17 +55,31 @@ function extractRecordKeys(
     .map(([name]) => name);
 }
 
+function parseNumber(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return undefined;
+}
+
 /** Mappt Portal-API-Response ({ farm }) auf PlayerData */
 export function mapPortalResponse(raw: unknown): PlayerData {
   const root = raw as Record<string, unknown>;
   const farm = (root.farm ?? root) as Record<string, unknown>;
 
   const farmId =
-    typeof farm.farmId === "number"
-      ? farm.farmId
-      : typeof root.farmId === "number"
-        ? root.farmId
-        : 0;
+    parseNumber(farm.farmId) ??
+    parseNumber(root.farmId) ??
+    parseNumber(root.id) ??
+    0;
 
   const rawInventory = (farm.inventory ?? {}) as Record<string, unknown>;
   const inventory: Record<string, string> = {};
@@ -120,10 +134,15 @@ export async function fetchPlayerData(jwt: string): Promise<PlayerData> {
   return mapPortalResponse(data);
 }
 
-export async function fetchPublicFarmData(farmId: number): Promise<PlayerData> {
-  const res = await fetch(
-    `https://api.sunflower-land.com/community/farms/${farmId}`,
-  );
+export async function fetchPublicFarmData(
+  farmId: number,
+  apiKey: string,
+): Promise<PlayerData> {
+  const res = await fetch(`/api/farm/${farmId}`, {
+    headers: {
+      "x-api-key": apiKey,
+    },
+  });
 
   if (!res.ok) {
     throw new Error(`API error: ${res.status}`);

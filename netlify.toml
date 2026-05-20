@@ -5,3 +5,8 @@
   from = "/api/market"
   to = "/.netlify/functions/market-prices"
   status = 200
+
+[[redirects]]
+  from = "/api/farm/:id"
+  to = "/.netlify/functions/farm-data?id=:id"
+  status = 200

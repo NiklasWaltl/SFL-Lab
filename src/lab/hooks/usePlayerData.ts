@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { fetchPublicFarmData, getMockPlayerData } from "../services/playerApi";
 import type { PlayerData } from "../types";
+import { useApiKey } from "./useApiKey";
 import { useFarmId } from "./useFarmId";
 
 export interface UsePlayerDataResult {
   farmId: number | null;
   setFarmId: (id: number | null) => void;
+  apiKey: string | null;
+  setApiKey: (key: string | null) => void;
   playerData: PlayerData | null;
   loading: boolean;
   error: string | null;
@@ -15,6 +18,7 @@ export interface UsePlayerDataResult {
 
 export function usePlayerData(): UsePlayerDataResult {
   const { farmId, setFarmId } = useFarmId();
+  const { apiKey, setApiKey } = useApiKey();
   const [playerData, setPlayerData] = useState<PlayerData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +32,7 @@ export function usePlayerData(): UsePlayerDataResult {
       setLoading(true);
       setError(null);
 
-      if (!farmId) {
+      if (!farmId || !apiKey) {
         if (!cancelled) {
           setPlayerData(getMockPlayerData());
           setIsMock(true);
@@ -39,7 +43,7 @@ export function usePlayerData(): UsePlayerDataResult {
       }
 
       try {
-        const data = await fetchPublicFarmData(farmId);
+        const data = await fetchPublicFarmData(farmId, apiKey);
         if (!cancelled) {
           setPlayerData(data);
           setIsMock(false);
@@ -62,7 +66,17 @@ export function usePlayerData(): UsePlayerDataResult {
     return () => {
       cancelled = true;
     };
-  }, [farmId]);
+  }, [farmId, apiKey]);
 
-  return { farmId, setFarmId, playerData, loading, error, isMock, fetchedAt };
+  return {
+    farmId,
+    setFarmId,
+    apiKey,
+    setApiKey,
+    playerData,
+    loading,
+    error,
+    isMock,
+    fetchedAt,
+  };
 }

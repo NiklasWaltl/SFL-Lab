@@ -135,6 +135,11 @@ export default defineConfig(() => {
           changeOrigin: true,
           rewrite: () => "/community/trades/rates",
         },
+        "/api/farm": {
+          target: "https://api.sunflower-land.com",
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/farm/, "/community/farms"),
+        },
       },
     },
     build: {
