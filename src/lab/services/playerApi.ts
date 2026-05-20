@@ -70,28 +70,41 @@ function parseNumber(value: unknown): number | undefined {
   return undefined;
 }
 
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function parseString(value: unknown): string | undefined {
+  const trimmed = typeof value === "string" ? value.trim() : "";
+  return trimmed ? trimmed : undefined;
+}
+
 function parseCropPlots(value: unknown): PlayerCropPlot[] {
   if (!value || typeof value !== "object") {
     return [];
   }
 
   return Object.entries(value as Record<string, unknown>).map(([id, plot]) => {
-    const plotRecord =
-      plot && typeof plot === "object" ? (plot as Record<string, unknown>) : {};
-    const cropRecord =
-      plotRecord.crop &&
-      typeof plotRecord.crop === "object" &&
-      plotRecord.crop !== null
-        ? (plotRecord.crop as Record<string, unknown>)
-        : {};
+    const plotRecord = asRecord(plot);
+    const cropRecord = asRecord(plotRecord.crop);
     const name =
-      typeof cropRecord.name === "string" ? cropRecord.name : undefined;
+      parseString(cropRecord.name) ??
+      parseString(cropRecord.item) ??
+      parseString(plotRecord.name) ??
+      parseString(plotRecord.item) ??
+      parseString(plotRecord.crop);
 
     return {
       id,
       name,
-      amount: parseNumber(cropRecord.amount) ?? parseNumber(plotRecord.amount),
-      plantedAt: parseNumber(cropRecord.plantedAt),
+      amount:
+        parseNumber(cropRecord.amount) ??
+        parseNumber(plotRecord.amount) ??
+        parseNumber(plotRecord.quantity),
+      plantedAt:
+        parseNumber(cropRecord.plantedAt) ?? parseNumber(plotRecord.plantedAt),
     };
   });
 }

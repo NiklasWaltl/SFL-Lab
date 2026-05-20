@@ -31,6 +31,7 @@ function getCropPrice(
   priceFlw: number | null;
   priceSource: CropCalculationLine["priceSource"];
 } {
+  // Priorität: live > manual > null
   const livePrice =
     marketPrices[config.marketKey] ??
     marketPrices[config.marketKey.toLowerCase()] ??
@@ -114,6 +115,8 @@ function aggregateCropPlots(cropPlots: PlayerCropPlot[]): CropAggregate[] {
 
   for (const plot of cropPlots) {
     if (!isCropName(plot.name)) {
+      // eslint-disable-next-line no-console
+      console.warn(`[crops] Unrecognised crop name: ${plot.name}`);
       continue;
     }
 
