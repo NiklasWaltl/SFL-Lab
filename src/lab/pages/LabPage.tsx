@@ -78,7 +78,8 @@ export function LabPage() {
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const lab = useLabState();
   const scenarioPersistence = useScenarioPersistence();
-  const { playerData, loading, error, isMock, fetchedAt } = usePlayerData();
+  const { jwt, setJwt, playerData, loading, error, isMock, fetchedAt } =
+    usePlayerData();
 
   const farm = useMemo(
     () => (playerData ? normalizeFarm(playerData) : null),
@@ -136,6 +137,8 @@ export function LabPage() {
         <main>
           {activeTab === "overview" && (
             <OverviewTab
+              jwt={jwt}
+              setJwt={setJwt}
               mode={lab.mode}
               farm={farm}
               actualResults={lab.actualResults}

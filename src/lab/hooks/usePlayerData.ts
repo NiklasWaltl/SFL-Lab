@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import {
-  fetchPlayerData,
-  getJwtFromUrl,
-  getMockPlayerData,
-} from "../services/playerApi";
+import { fetchPlayerData, getMockPlayerData } from "../services/playerApi";
 import type { PlayerData } from "../types";
+import { useJwt } from "./useJwt";
 
 export interface UsePlayerDataResult {
+  jwt: string | null;
+  setJwt: (token: string | null) => void;
   playerData: PlayerData | null;
   loading: boolean;
   error: string | null;
@@ -15,6 +14,7 @@ export interface UsePlayerDataResult {
 }
 
 export function usePlayerData(): UsePlayerDataResult {
+  const { jwt, setJwt } = useJwt();
   const [playerData, setPlayerData] = useState<PlayerData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,8 +27,6 @@ export function usePlayerData(): UsePlayerDataResult {
     async function load() {
       setLoading(true);
       setError(null);
-
-      const jwt = getJwtFromUrl();
 
       if (!jwt) {
         if (!cancelled) {
@@ -64,7 +62,7 @@ export function usePlayerData(): UsePlayerDataResult {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [jwt]);
 
-  return { playerData, loading, error, isMock, fetchedAt };
+  return { jwt, setJwt, playerData, loading, error, isMock, fetchedAt };
 }

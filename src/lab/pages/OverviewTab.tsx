@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { BoostPanel } from "../components/BoostPanel";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { GlobalParamsPanel } from "../components/GlobalParamsPanel";
+import { JwtInput } from "../components/JwtInput";
 import { ResourceCard } from "../components/ResourceCard";
 import { CategoryPreview } from "../components/overview/CategoryPreview";
 import { KpiRow } from "../components/overview/KpiRow";
@@ -21,6 +22,8 @@ import { useMarketPrices } from "../hooks/useMarketPrices";
 import { computeOverviewKpis } from "../utils/overviewKpis";
 
 export interface OverviewTabProps {
+  jwt: string | null;
+  setJwt: (token: string | null) => void;
   mode: LabMode;
   farm: NormalizedFarm | null;
   actualResults: ResourceResult[];
@@ -46,6 +49,8 @@ export interface OverviewTabProps {
 }
 
 export function OverviewTab({
+  jwt,
+  setJwt,
   mode,
   farm,
   actualResults,
@@ -124,14 +129,27 @@ export function OverviewTab({
 
   if (loading) {
     return (
-      <section className="flex min-h-[200px] items-center justify-center rounded-xl border border-[#3e2731]/40 bg-[#181425] p-8">
-        <p className="text-gray-400">{"Farmdaten werden geladen…"}</p>
-      </section>
+      <article className="flex flex-col gap-6">
+        <JwtInput
+          jwt={jwt}
+          onSubmit={(token) => setJwt(token)}
+          onClear={() => setJwt(null)}
+        />
+        <section className="flex min-h-[200px] items-center justify-center rounded-xl border border-[#3e2731]/40 bg-[#181425] p-8">
+          <p className="text-gray-400">{"Farmdaten werden geladen…"}</p>
+        </section>
+      </article>
     );
   }
 
   return (
     <article className="flex flex-col gap-6">
+      <JwtInput
+        jwt={jwt}
+        onSubmit={(token) => setJwt(token)}
+        onClear={() => setJwt(null)}
+      />
+
       {isMock && (
         <p
           className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200"
