@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { BoostPanel } from "../components/BoostPanel";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { GlobalParamsPanel } from "../components/GlobalParamsPanel";
@@ -13,6 +13,7 @@ import type {
   ResourceConfig,
   ResourceResult,
 } from "../types";
+import { useMarketPrices } from "../hooks/useMarketPrices";
 import { computeOverviewKpis } from "../utils/overviewKpis";
 
 export interface OverviewTabProps {
@@ -56,6 +57,26 @@ export function OverviewTab({
   experimentActiveBoosts,
 }: OverviewTabProps) {
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const {
+    prices: marketPrices,
+    loading: pricesLoading,
+    error: pricesError,
+    refresh: refreshMarketPrices,
+  } = useMarketPrices();
+
+  useEffect(() => {
+    if (!marketPrices) return;
+
+    const wood = marketPrices.Wood ?? marketPrices.wood;
+    const stone = marketPrices.Stone ?? marketPrices.stone;
+
+    if (typeof wood === "number" && wood > 0) {
+      setGlobalParam("marketPriceWood", wood);
+    }
+    if (typeof stone === "number" && stone > 0) {
+      setGlobalParam("marketPriceStone", stone);
+    }
+  }, [marketPrices, setGlobalParam]);
 
   const kpis = useMemo(
     () =>
@@ -175,7 +196,15 @@ export function OverviewTab({
             {"Experiment zurücksetzen"}
           </button>
         </div>
-        <GlobalParamsPanel params={globalParams} onChange={setGlobalParam} />
+        <GlobalParamsPanel
+          params={globalParams}
+          onChange={setGlobalParam}
+          marketPricesState={{
+            loading: pricesLoading,
+            error: pricesError,
+            onRefresh: refreshMarketPrices,
+          }}
+        />
         <BoostPanel
           boosts={boosts}
           experimentBoostIds={experimentBoostIds}
