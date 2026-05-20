@@ -14,6 +14,7 @@ function formatUpdatedAt(iso: string): string {
 
 interface ScenarioRowProps {
   scenario: Scenario;
+  positionCount: number;
   isActive: boolean;
   isEditing: boolean;
   editingName: string;
@@ -28,6 +29,7 @@ interface ScenarioRowProps {
 
 function ScenarioRow({
   scenario,
+  positionCount,
   isActive,
   isEditing,
   editingName,
@@ -84,6 +86,12 @@ function ScenarioRow({
               >
                 {scenario.name}
               </h3>
+              {positionCount > 0 && (
+                <span className="rounded-full bg-[#3e2731] px-2 py-0.5 text-xs text-[#ead4aa]">
+                  {positionCount}{" "}
+                  {"Position" + (positionCount === 1 ? "" : "en")}
+                </span>
+              )}
               {isActive && (
                 <span className="rounded bg-amber-700/50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-200">
                   {"Aktiv"}
@@ -210,28 +218,35 @@ export function ScenariosTab({ scenarioPersistence }: ScenariosTabProps) {
         <p className="text-sm text-gray-500">{"Keine Szenarien vorhanden."}</p>
       ) : (
         <div className="space-y-3">
-          {scenarios.map((scenario) => (
-            <ScenarioRow
-              key={scenario.id}
-              scenario={scenario}
-              isActive={scenario.id === activeScenarioId}
-              isEditing={editingId === scenario.id}
-              editingName={editingName}
-              onEditingNameChange={setEditingName}
-              onStartRename={() => handleStartRename(scenario)}
-              onSaveRename={handleSaveRename}
-              onCancelRename={handleCancelRename}
-              onSetActive={() => setActiveScenarioId(scenario.id)}
-              onDuplicate={() => dupScenario(scenario.id)}
-              onDelete={() =>
-                setConfirmState({
-                  isOpen: true,
-                  scenarioId: scenario.id,
-                  scenarioName: scenario.name,
-                })
-              }
-            />
-          ))}
+          {scenarios.map((scenario) => {
+            const positionCount = Object.keys(
+              scenario.data.portfolio.purchaseDates,
+            ).length;
+
+            return (
+              <ScenarioRow
+                key={scenario.id}
+                scenario={scenario}
+                positionCount={positionCount}
+                isActive={scenario.id === activeScenarioId}
+                isEditing={editingId === scenario.id}
+                editingName={editingName}
+                onEditingNameChange={setEditingName}
+                onStartRename={() => handleStartRename(scenario)}
+                onSaveRename={handleSaveRename}
+                onCancelRename={handleCancelRename}
+                onSetActive={() => setActiveScenarioId(scenario.id)}
+                onDuplicate={() => dupScenario(scenario.id)}
+                onDelete={() =>
+                  setConfirmState({
+                    isOpen: true,
+                    scenarioId: scenario.id,
+                    scenarioName: scenario.name,
+                  })
+                }
+              />
+            );
+          })}
         </div>
       )}
 
