@@ -1,6 +1,24 @@
+import prices from "../config/defaultPrices.json";
+
 export type ResourcePrices = Record<string, number>;
 
 export const MARKET_RATES_URL = "/api/market";
+
+export interface MarketPricesResponse {
+  prices: ResourcePrices;
+  isLive: boolean;
+  lastUpdated?: string;
+}
+
+function getFallbackMarketPrices(): MarketPricesResponse {
+  const { lastUpdated, ...fallbackPrices } = prices;
+
+  return {
+    prices: fallbackPrices,
+    isLive: false,
+    lastUpdated,
+  };
+}
 
 function toResourcePrices(obj: Record<string, unknown>): ResourcePrices {
   const result: ResourcePrices = {};
@@ -48,15 +66,20 @@ function mapMarketRatesResponse(data: unknown): ResourcePrices {
   return toResourcePrices(obj);
 }
 
-export async function fetchMarketPrices(): Promise<ResourcePrices> {
-  const res = await fetch(MARKET_RATES_URL);
+export async function fetchMarketPrices(): Promise<MarketPricesResponse> {
+  try {
+    const res = await fetch(MARKET_RATES_URL);
 
-  if (!res.ok) {
-    throw new Error(
-      `Marktpreise konnten nicht geladen werden (HTTP ${res.status})`,
-    );
+    if (!res.ok) {
+      return getFallbackMarketPrices();
+    }
+
+    const data: unknown = await res.json();
+    return {
+      prices: mapMarketRatesResponse(data),
+      isLive: true,
+    };
+  } catch {
+    return getFallbackMarketPrices();
   }
-
-  const data: unknown = await res.json();
-  return mapMarketRatesResponse(data);
 }

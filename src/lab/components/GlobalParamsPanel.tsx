@@ -4,6 +4,8 @@ import type { GlobalParams } from "../types";
 export interface MarketPricesState {
   loading: boolean;
   error: string | null;
+  isLive: boolean;
+  lastUpdated?: string;
   onRefresh: () => void;
 }
 
@@ -81,10 +83,7 @@ export function GlobalParamsPanel({
   marketPricesState,
 }: GlobalParamsPanelProps) {
   const pricesLoading = marketPricesState?.loading ?? false;
-  const pricesError = marketPricesState?.error ?? null;
-  const marketInputsDisabled = pricesLoading && !pricesError;
-  const marketLoaded =
-    marketPricesState !== undefined && !pricesLoading && !pricesError;
+  const marketLoaded = marketPricesState !== undefined && !pricesLoading;
 
   return (
     <section className="rounded-xl border border-[#3e2731]/40 bg-[#181425] p-4 shadow-lg">
@@ -108,37 +107,34 @@ export function GlobalParamsPanel({
             <h3 className="text-sm font-semibold text-[#ead4aa]">
               {"Marktpreise"}
             </h3>
-            {pricesLoading && !pricesError && (
+            {pricesLoading && (
               <span
                 className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-amber-500/30 border-t-amber-400"
                 role="status"
                 aria-label={"Marktpreise werden geladen"}
               />
             )}
-            {marketLoaded && (
+            {marketLoaded && marketPricesState.isLive && (
               <span className="text-xs text-emerald-400/90">
-                {"Live vom Markt"}
+                {"✅ Live vom Markt"}
+              </span>
+            )}
+            {marketLoaded && !marketPricesState.isLive && (
+              <span className="text-xs text-gray-400">
+                {"📋 Fallback-Preise – Stand: "}
+                {marketPricesState.lastUpdated ?? "unbekannt"}
               </span>
             )}
             <button
               type="button"
               onClick={marketPricesState.onRefresh}
               disabled={pricesLoading}
+              aria-label={"Preise aktualisieren"}
               className="ml-auto rounded-lg border border-[#3e2731]/60 bg-transparent px-3 py-1.5 text-sm text-gray-400 transition-colors hover:border-[#3e2731] hover:text-[#ead4aa] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {"🔄 Preise aktualisieren"}
+              {"🔄"}
             </button>
           </div>
-
-          {pricesError && (
-            <p
-              className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300"
-              role="alert"
-            >
-              {pricesError}
-              {" – Manuelle Eingabe wird verwendet."}
-            </p>
-          )}
 
           <div className="grid gap-4 sm:grid-cols-2">
             {MARKET_PRICE_FIELDS.map(({ key, label, hint, step }) => (
@@ -148,7 +144,6 @@ export function GlobalParamsPanel({
                 hint={hint}
                 step={step}
                 value={params[key]}
-                disabled={marketInputsDisabled}
                 onChange={(value) => onChange(key, value)}
               />
             ))}

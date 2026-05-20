@@ -61,6 +61,8 @@ export function OverviewTab({
     prices: marketPrices,
     loading: pricesLoading,
     error: pricesError,
+    isLive: pricesAreLive,
+    lastUpdated: pricesLastUpdated,
     refresh: refreshMarketPrices,
   } = useMarketPrices();
 
@@ -202,6 +204,8 @@ export function OverviewTab({
           marketPricesState={{
             loading: pricesLoading,
             error: pricesError,
+            isLive: pricesAreLive,
+            lastUpdated: pricesLastUpdated,
             onRefresh: refreshMarketPrices,
           }}
         />
