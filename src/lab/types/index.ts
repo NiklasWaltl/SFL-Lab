@@ -114,7 +114,7 @@ export type {
   NftSimulationResult,
   NftSimulationSummary,
 } from "./nft";
-export type { NormalizedFarm, PlayerData } from "./player";
+export type { Bumpkin, NormalizedFarm, PlayerData } from "./player";
 export type { PortfolioPosition } from "./portfolio";
 export type { Scenario, ScenarioData, ScenarioPortfolioData } from "./scenario";
 export type { SimulatorImpact, SimulatorSelection } from "./simulator";

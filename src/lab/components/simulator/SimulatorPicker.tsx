@@ -183,7 +183,9 @@ export function SimulatorPicker({
                     {" SP"}
                   </span>
                   {skill.owned ? (
-                    <span className="text-xs text-gray-500">{"Owned"}</span>
+                    <span className="text-xs text-emerald-300">
+                      {"Bereits gelernt"}
+                    </span>
                   ) : (
                     <span className="text-xs text-amber-400/90">
                       {"Nicht owned"}

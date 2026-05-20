@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { LabTabNav, TABS, type TabId } from "../components/LabTabNav";
 import { TabPlaceholder } from "../components/TabPlaceholder";
+import { useFarmSkillState } from "../hooks/useFarmSkillState";
 import { useLabState, type LabMode } from "../hooks/useLabState";
 import { usePlayerData } from "../hooks/usePlayerData";
 import { useScenarioPersistence } from "../hooks/useScenarioPersistence";
@@ -10,7 +11,6 @@ import { OverviewTab } from "./OverviewTab";
 import { PortfolioTab } from "./PortfolioTab";
 import { ScenariosTab } from "./ScenariosTab";
 import { SimulatorTab } from "./SimulatorTab";
-import { getSkillPointsSpent, getTotalSkillPoints } from "../utils/boosts";
 
 function ModeToggle({
   mode,
@@ -94,15 +94,12 @@ export function LabPage() {
     () => (playerData ? normalizeFarm(playerData) : null),
     [playerData],
   );
-  const farmSkillState = useMemo(() => {
-    const farmLevel = farm?.level ?? 0;
-
-    return {
-      farmLevel,
-      skillPointsTotal: getTotalSkillPoints(farmLevel),
-      skillPointsSpent: getSkillPointsSpent(lab.skills),
-    };
-  }, [farm, lab.skills]);
+  const { farmSkillState, skills } = useFarmSkillState({
+    playerData,
+    farmLevel: farm?.level ?? 0,
+    skills: lab.skills,
+  });
+  const boosts = useMemo(() => [...lab.nfts, ...skills], [lab.nfts, skills]);
 
   const activeTabLabel =
     TABS.find((t) => t.id === activeTab)?.label ?? activeTab;
@@ -161,9 +158,9 @@ export function LabPage() {
               globalParams={lab.globalParams}
               setGlobalParam={lab.setGlobalParam}
               resources={lab.resources}
-              boosts={lab.boosts}
+              boosts={boosts}
               nfts={lab.nfts}
-              skills={lab.skills}
+              skills={skills}
               farmSkillState={farmSkillState}
               experimentBoostIds={lab.experimentBoostIds}
               toggleExperimentBoost={lab.toggleExperimentBoost}
@@ -184,7 +181,7 @@ export function LabPage() {
               error={error}
               globalParams={lab.globalParams}
               resources={lab.resources}
-              boosts={lab.boosts}
+              boosts={boosts}
               actualActiveBoosts={lab.actualActiveBoosts}
               experimentActiveBoosts={lab.experimentActiveBoosts}
             />
@@ -193,7 +190,7 @@ export function LabPage() {
           {activeTab === "simulator" && (
             <SimulatorTab
               nfts={lab.nfts}
-              skills={lab.skills}
+              skills={skills}
               farmSkillState={farmSkillState}
               baseState={{
                 resources: lab.resources,
@@ -204,7 +201,7 @@ export function LabPage() {
 
           {activeTab === "portfolio" && (
             <PortfolioTab
-              boosts={lab.boosts}
+              boosts={boosts}
               resources={lab.resources}
               globalParams={lab.globalParams}
               actualActiveBoosts={lab.actualActiveBoosts}

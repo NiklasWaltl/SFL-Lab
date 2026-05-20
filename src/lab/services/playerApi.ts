@@ -95,6 +95,9 @@ export function mapPortalResponse(raw: unknown): PlayerData {
             ? bumpkinRaw.experience
             : parseFloat(String(bumpkinRaw.experience ?? 0)) || 0,
         equipped: bumpkinRaw.equipped as Record<string, string> | undefined,
+        skills: bumpkinRaw.skills as
+          | Record<string, number | boolean>
+          | undefined,
       }
     : undefined;
 
