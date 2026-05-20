@@ -18,6 +18,7 @@ export function normalizeFarm(data: PlayerData): NormalizedFarm {
     coinBalance: parseBalance(data.inventory, "Coin"),
     flowerBalance: parseBalance(data.inventory, "Flower"),
     level: getBumpkinLevel(data.bumpkin?.experience ?? 0),
+    cropPlots: data.cropPlots ?? [],
     collectibles: getCollectibleNames(data),
     buildings: getBuildingNames(data),
   };

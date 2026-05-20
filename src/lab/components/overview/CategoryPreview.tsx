@@ -10,7 +10,7 @@ interface CategoryPreviewProps {
 
 interface CategoryTile {
   name: string;
-  status: "active" | "placeholder";
+  status: "active" | "partial" | "placeholder";
   detail?: string;
 }
 
@@ -25,7 +25,11 @@ export function CategoryPreview({
       status: "active",
       detail: `Wood ${formatNumber(kpis.woodProfitPerDay)} / Stone ${formatNumber(kpis.stoneProfitPerDay)} FLW/Tag`,
     },
-    { name: "Crops", status: "placeholder" },
+    {
+      name: "Crops",
+      status: "partial",
+      detail: "Plot-basierte Teilberechnung im Kategorien-Tab",
+    },
     { name: "Tiere", status: "placeholder" },
     { name: "Crafting", status: "placeholder" },
     { name: "Trading", status: "placeholder" },
@@ -62,6 +66,13 @@ export function CategoryPreview({
                 <p className="mt-2 text-sm text-gray-500">{"Bald verfügbar"}</p>
                 <span className="mt-2 inline-block rounded bg-[#3e2731]/40 px-2 py-0.5 text-xs text-gray-400">
                   {"Platzhalter"}
+                </span>
+              </>
+            ) : cat.status === "partial" ? (
+              <>
+                <p className="mt-2 text-sm text-gray-300">{cat.detail}</p>
+                <span className="mt-2 inline-block rounded bg-amber-500/20 px-2 py-0.5 text-xs text-amber-300">
+                  {"Teilweise"}
                 </span>
               </>
             ) : (

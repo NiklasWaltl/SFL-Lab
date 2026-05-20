@@ -143,6 +143,7 @@ export function useSimulator({
         simulationResults,
         [],
         baseState.globalParams,
+        {},
         baseState.resources,
         [...nfts, ...skills],
         ownedBoosts,

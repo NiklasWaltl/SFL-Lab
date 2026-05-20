@@ -1,16 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  fetchMarketPrices,
-  type MarketPricesResponse,
-  type ResourcePrices,
-} from "../services/marketPrices";
+import type { MarketPriceMap, MarketPricesResponse } from "../types";
+import { fetchMarketPrices } from "../services/marketPrices";
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
 let cache: (MarketPricesResponse & { fetchedAt: number }) | null = null;
 
 export interface UseMarketPricesResult {
-  prices: ResourcePrices | null;
+  prices: MarketPriceMap | null;
   loading: boolean;
   error: string | null;
   isLive: boolean;

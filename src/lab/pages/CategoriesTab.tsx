@@ -3,6 +3,7 @@ import { CategoryCard } from "../components/categories/CategoryCard";
 import { CategoryDetails } from "../components/categories/CategoryDetails";
 import { CATEGORIES } from "../config/categories.config";
 import type { LabMode } from "../hooks/useLabState";
+import { useMarketPrices } from "../hooks/useMarketPrices";
 import type {
   Boost,
   CategoryDetailContext,
@@ -59,6 +60,11 @@ export function CategoriesTab({
   experimentActiveBoosts,
 }: CategoriesTabProps) {
   const [expandedKey, setExpandedKey] = useState<CategoryKey | null>(null);
+  const { prices: marketPrices } = useMarketPrices();
+  const categoryMarketPrices = useMemo(
+    () => marketPrices ?? {},
+    [marketPrices],
+  );
   const isExperimentView = mode === "experiment";
   const connectionStatusMessage = getFarmConnectionStatusMessage({
     farmId,
@@ -76,6 +82,7 @@ export function CategoriesTab({
         isMock ? [] : experimentResults,
         isMock ? [] : deltas,
         globalParams,
+        categoryMarketPrices,
         resources,
         boosts,
         isMock ? [] : actualActiveBoosts,
@@ -88,6 +95,7 @@ export function CategoriesTab({
       experimentResults,
       deltas,
       globalParams,
+      categoryMarketPrices,
       resources,
       boosts,
       actualActiveBoosts,
@@ -130,14 +138,19 @@ export function CategoriesTab({
 
   const detailContext: CategoryDetailContext = useMemo(
     () => ({
+      farm: isMock ? null : farm,
       globalParams,
+      marketPrices: categoryMarketPrices,
       resources,
       boosts,
       actualActiveBoosts,
       experimentActiveBoosts,
     }),
     [
+      farm,
+      isMock,
       globalParams,
+      categoryMarketPrices,
       resources,
       boosts,
       actualActiveBoosts,

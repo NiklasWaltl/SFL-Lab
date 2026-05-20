@@ -109,12 +109,25 @@ export type {
   CategoryValue,
 } from "./categories";
 export type {
+  CropBreakdown,
+  CropCalculationLine,
+  CropConfig,
+  CropDetailLine,
+  CropName,
+} from "./crops";
+export type { MarketPriceMap, MarketPricesResponse } from "./market";
+export type {
   NftAsset,
   NftSimulationParams,
   NftSimulationResult,
   NftSimulationSummary,
 } from "./nft";
-export type { Bumpkin, NormalizedFarm, PlayerData } from "./player";
+export type {
+  Bumpkin,
+  NormalizedFarm,
+  PlayerCropPlot,
+  PlayerData,
+} from "./player";
 export type { PortfolioPosition } from "./portfolio";
 export type { Scenario, ScenarioData, ScenarioPortfolioData } from "./scenario";
 export type { SimulatorImpact, SimulatorSelection } from "./simulator";

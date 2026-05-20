@@ -15,8 +15,9 @@ export const CATEGORIES = [
   {
     key: "crops",
     label: "Crops",
-    description: "Datenbasis für Ernten folgt in einer späteren Version",
-    defaultStatus: "placeholder",
+    description:
+      "Teilberechnung aus aktueller Plot-Belegung, Marktpreisen und Seed-Kosten",
+    defaultStatus: "partial",
   },
   {
     key: "animals",

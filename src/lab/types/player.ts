@@ -6,6 +6,13 @@ export interface Bumpkin {
   skills?: Record<string, number | boolean>;
 }
 
+export interface PlayerCropPlot {
+  id: string;
+  name?: string;
+  amount?: number;
+  plantedAt?: number;
+}
+
 export interface PlayerData {
   farmId: number;
   nftId?: number; // NFT-Token-ID der Farm auf der Blockchain
@@ -21,6 +28,7 @@ export interface PlayerData {
     fruitPatches?: number; // Anzahl Frucht-Felder (farm.fruitPatches Record)
     chickens?: number; // Anzahl Hühner (farm.chickens Record)
   };
+  cropPlots?: PlayerCropPlot[];
   inventory: Record<string, string>;
   buildings?: Record<string, unknown[]>;
   collectibles?: Record<string, unknown[]>;
@@ -35,6 +43,7 @@ export interface NormalizedFarm {
   coinBalance: number;
   flowerBalance: number;
   level: number;
+  cropPlots: PlayerCropPlot[];
   collectibles: string[];
   buildings: string[];
 }

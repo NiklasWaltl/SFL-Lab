@@ -7,6 +7,7 @@ import type {
 import {
   getBoostDetailLines,
   getCostDetailLines,
+  getCropDetailLines,
   getNetDetailLines,
   getResourceDetailLines,
 } from "../../utils/categoryBreakdown";
@@ -21,7 +22,7 @@ interface CategoryDetailsProps {
   isExperimentView: boolean;
 }
 
-const PLACEHOLDER_KEYS = new Set(["crops", "animals", "crafting", "trading"]);
+const PLACEHOLDER_KEYS = new Set(["animals", "crafting", "trading"]);
 
 export function CategoryDetails({
   category,
@@ -52,6 +53,12 @@ export function CategoryDetails({
           isExperimentView={isExperimentView}
         />
       )}
+      {category.key === "crops" && (
+        <CropDetails
+          detailContext={detailContext}
+          isExperimentView={isExperimentView}
+        />
+      )}
       {category.key === "boosts" && (
         <BoostDetails
           detailContext={detailContext}
@@ -62,8 +69,7 @@ export function CategoryDetails({
         <CostDetails
           actualResults={actualResults}
           experimentResults={experimentResults}
-          globalParams={detailContext.globalParams}
-          resources={detailContext.resources}
+          detailContext={detailContext}
           isExperimentView={isExperimentView}
         />
       )}
@@ -107,6 +113,96 @@ function ResourceDetails({
         />
       ))}
     </DetailList>
+  );
+}
+
+function CropDetails({
+  detailContext,
+  isExperimentView,
+}: {
+  detailContext: CategoryDetailContext;
+  isExperimentView: boolean;
+}) {
+  const lines = getCropDetailLines(
+    detailContext.farm,
+    detailContext.marketPrices,
+    detailContext.actualActiveBoosts,
+    detailContext.experimentActiveBoosts,
+  );
+
+  if (lines.length === 0) {
+    return (
+      <p className="text-sm text-gray-400">
+        {"Keine bepflanzten Crop-Felder mit unterstütztem Crop-Typ gefunden."}
+      </p>
+    );
+  }
+
+  return (
+    <div>
+      <p className="mb-3 text-xs text-gray-500">
+        {
+          "Teilberechnung: aktuelle Plot-Belegung wird als tägliche Rotation modelliert; Seed-Kosten sind eingerechnet."
+        }
+      </p>
+      <DetailList title="Crops">
+        {lines.map((line) => (
+          <li
+            key={line.cropName}
+            className="rounded-lg border border-[#3e2731]/30 p-3"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="font-medium text-[#ead4aa]">{line.label}</p>
+              <p className="text-xs text-gray-500">
+                {line.plotCount}
+                {" Plot(s) · "}
+                {formatNumber(line.priceFlw)}
+                {" FLW/Stk."}
+              </p>
+            </div>
+            <p className="mt-1 text-sm text-gray-400">
+              {"Produktion/Tag: "}
+              {formatNumber(line.actualProductionPerDay)}
+              {isExperimentView && (
+                <>
+                  {" / "}
+                  {formatNumber(line.experimentProductionPerDay)}
+                </>
+              )}
+            </p>
+            <p className="mt-1 text-sm text-gray-400">
+              {"Umsatz: "}
+              {formatNumber(line.actualRevenueFlw)}
+              {" · Seeds: "}
+              {formatNumber(line.actualSeedCostFlw)}
+              {isExperimentView && (
+                <>
+                  {" · Exp Umsatz: "}
+                  {formatNumber(line.experimentRevenueFlw)}
+                  {" · Exp Seeds: "}
+                  {formatNumber(line.experimentSeedCostFlw)}
+                </>
+              )}
+            </p>
+            <p className="mt-1 text-sm text-gray-300">
+              {"Netto: "}
+              {formatNumber(line.actualNetFlw)}
+              {" FLW/Tag"}
+              {isExperimentView && (
+                <>
+                  {" / "}
+                  {formatNumber(line.experimentNetFlw)}
+                  {" FLW/Tag · "}
+                  <span className={deltaColorClass(line.delta)}>
+                    {formatDelta(line.delta)}
+                  </span>
+                </>
+              )}
+            </p>
+          </li>
+        ))}
+      </DetailList>
+    </div>
   );
 }
 
@@ -182,24 +278,40 @@ function BoostDetails({
 function CostDetails({
   actualResults,
   experimentResults,
-  globalParams,
-  resources,
+  detailContext,
   isExperimentView,
 }: {
   actualResults: ResourceResult[];
   experimentResults: ResourceResult[];
-  globalParams: CategoryDetailContext["globalParams"];
-  resources: CategoryDetailContext["resources"];
+  detailContext: CategoryDetailContext;
   isExperimentView: boolean;
 }) {
   const actualLines = getCostDetailLines(
     actualResults,
-    globalParams,
-    resources,
+    detailContext.globalParams,
+    detailContext.resources,
   );
   const experimentLines = isExperimentView
-    ? getCostDetailLines(experimentResults, globalParams, resources)
+    ? getCostDetailLines(
+        experimentResults,
+        detailContext.globalParams,
+        detailContext.resources,
+      )
     : [];
+  const cropLines = getCropDetailLines(
+    detailContext.farm,
+    detailContext.marketPrices,
+    detailContext.actualActiveBoosts,
+    detailContext.experimentActiveBoosts,
+  );
+  const actualCropSeedCost = cropLines.reduce(
+    (sum, line) => sum + line.actualSeedCostFlw,
+    0,
+  );
+  const experimentCropSeedCost = cropLines.reduce(
+    (sum, line) => sum + line.experimentSeedCostFlw,
+    0,
+  );
 
   return (
     <DetailList title="Kostentreiber">
@@ -238,6 +350,23 @@ function CostDetails({
           </li>
         );
       })}
+      {actualCropSeedCost > 0 && (
+        <li className="rounded-lg border border-[#3e2731]/30 p-3">
+          <p className="font-medium text-[#ead4aa]">{"Crops"}</p>
+          <p className="mt-1 text-sm text-gray-400">
+            {"Seeds gesamt: "}
+            {formatNumber(actualCropSeedCost)}
+            {" FLW/Tag"}
+            {isExperimentView && (
+              <>
+                {" · Experiment: "}
+                {formatNumber(experimentCropSeedCost)}
+                {" FLW/Tag"}
+              </>
+            )}
+          </p>
+        </li>
+      )}
     </DetailList>
   );
 }
@@ -255,7 +384,7 @@ function NetDetails({
     <div>
       <p className="mb-3 text-xs text-gray-500">
         {
-          "Netto entspricht dem P2P-Gewinn aller Ressourcen. Boost-Zeile zeigt marginale Attribution."
+          "Netto entspricht dem Gewinn aller berechneten Bereiche. Boost-Zeile zeigt marginale Attribution."
         }
       </p>
       <ul className="flex flex-col gap-2">

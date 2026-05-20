@@ -1,4 +1,4 @@
-import type { PlayerData } from "../types";
+import type { PlayerCropPlot, PlayerData } from "../types";
 
 const DEFAULT_API_URL = "https://api-dev.sunflower-land.com";
 const DEFAULT_PORTAL_ID = "sfl-lab";
@@ -68,6 +68,32 @@ function parseNumber(value: unknown): number | undefined {
   }
 
   return undefined;
+}
+
+function parseCropPlots(value: unknown): PlayerCropPlot[] {
+  if (!value || typeof value !== "object") {
+    return [];
+  }
+
+  return Object.entries(value as Record<string, unknown>).map(([id, plot]) => {
+    const plotRecord =
+      plot && typeof plot === "object" ? (plot as Record<string, unknown>) : {};
+    const cropRecord =
+      plotRecord.crop &&
+      typeof plotRecord.crop === "object" &&
+      plotRecord.crop !== null
+        ? (plotRecord.crop as Record<string, unknown>)
+        : {};
+    const name =
+      typeof cropRecord.name === "string" ? cropRecord.name : undefined;
+
+    return {
+      id,
+      name,
+      amount: parseNumber(cropRecord.amount) ?? parseNumber(plotRecord.amount),
+      plantedAt: parseNumber(cropRecord.plantedAt),
+    };
+  });
 }
 
 /** Mappt Portal-API-Response ({ farm }) auf PlayerData */
@@ -145,6 +171,7 @@ export function mapPortalResponse(raw: unknown): PlayerData {
           ? Object.keys(farm.chickens as object).length
           : undefined,
     },
+    cropPlots: parseCropPlots(farm.crops),
     inventory,
     buildings: buildingsSource,
     collectibles: collectiblesSource,
@@ -231,6 +258,11 @@ export function getMockPlayerData(): PlayerData {
       fruitPatches: 4,
       chickens: 5,
     },
+    cropPlots: [
+      { id: "1", name: "Sunflower", amount: 1, plantedAt: Date.now() },
+      { id: "2", name: "Potato", amount: 1, plantedAt: Date.now() },
+      { id: "3", name: "Pumpkin", amount: 1, plantedAt: Date.now() },
+    ],
     inventory: {
       Wood: "530.4",
       Stone: "330",

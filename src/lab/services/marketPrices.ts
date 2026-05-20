@@ -1,29 +1,41 @@
 import prices from "../config/defaultPrices.json";
-
-export type ResourcePrices = Record<string, number>;
+import type { MarketPriceMap, MarketPricesResponse } from "../types";
 
 export const MARKET_RATES_URL = "/api/market";
 
-export interface MarketPricesResponse {
-  prices: ResourcePrices;
-  isLive: boolean;
+type DefaultPrices = Record<string, number | string | undefined> & {
   lastUpdated?: string;
-  errorMessage?: string;
+};
+
+function getDefaultPrices(): {
+  prices: MarketPriceMap;
+  lastUpdated?: string;
+} {
+  const { lastUpdated, ...rawPrices } = prices as DefaultPrices;
+  const fallbackPrices: MarketPriceMap = {};
+
+  for (const [key, value] of Object.entries(rawPrices)) {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      fallbackPrices[key] = value;
+    }
+  }
+
+  return { prices: fallbackPrices, lastUpdated };
 }
 
 function getFallbackMarketPrices(errorMessage?: string): MarketPricesResponse {
-  const { lastUpdated, ...fallbackPrices } = prices;
+  const fallback = getDefaultPrices();
 
   return {
-    prices: fallbackPrices,
+    prices: fallback.prices,
     isLive: false,
-    lastUpdated,
+    lastUpdated: fallback.lastUpdated,
     errorMessage,
   };
 }
 
-function toResourcePrices(obj: Record<string, unknown>): ResourcePrices {
-  const result: ResourcePrices = {};
+function toResourcePrices(obj: Record<string, unknown>): MarketPriceMap {
+  const result: MarketPriceMap = {};
 
   for (const [key, value] of Object.entries(obj)) {
     if (typeof value === "number" && Number.isFinite(value)) {
@@ -46,7 +58,7 @@ function toResourcePrices(obj: Record<string, unknown>): ResourcePrices {
   return result;
 }
 
-function mapMarketRatesResponse(data: unknown): ResourcePrices {
+function mapMarketRatesResponse(data: unknown): MarketPriceMap {
   if (!data || typeof data !== "object") {
     throw new Error("Ungültige Marktpreis-Response");
   }
@@ -79,8 +91,12 @@ export async function fetchMarketPrices(): Promise<MarketPricesResponse> {
     }
 
     const data: unknown = await res.json();
+    const fallback = getDefaultPrices();
     return {
-      prices: mapMarketRatesResponse(data),
+      prices: {
+        ...fallback.prices,
+        ...mapMarketRatesResponse(data),
+      },
       isLive: true,
     };
   } catch {

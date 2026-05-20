@@ -4,12 +4,17 @@ import type {
   CategoryValue,
   ExperimentDelta,
   GlobalParams,
+  MarketPriceMap,
   NormalizedFarm,
   ResourceConfig,
   ResourceResult,
 } from "../types";
 import { CATEGORIES, CATEGORY_BY_KEY } from "../config/categories.config";
 import { calculateBoostMarginalProfit } from "./calculations";
+import {
+  calculateCropBreakdown,
+  getCropDetailLines as getCropDetailLinesFromDomain,
+} from "./crops";
 
 const PLACEHOLDER_KEYS: CategoryKey[] = CATEGORIES.filter(
   (category) => category.defaultStatus === "placeholder",
@@ -96,11 +101,12 @@ function buildCategory(
 }
 
 export function getCategoryBreakdown(
-  _farm: NormalizedFarm | null,
+  farm: NormalizedFarm | null,
   actualResults: ResourceResult[],
   experimentResults: ResourceResult[],
   _deltas: ExperimentDelta[],
   globalParams: GlobalParams,
+  marketPrices: MarketPriceMap,
   resources: ResourceConfig[],
   _boosts: Boost[],
   actualActiveBoosts: Boost[],
@@ -108,9 +114,21 @@ export function getCategoryBreakdown(
 ): CategoryValue[] {
   const resourcesActual = sumProfit(actualResults);
   const resourcesExperiment = sumProfit(experimentResults);
+  const cropsActual = calculateCropBreakdown(
+    farm,
+    marketPrices,
+    actualActiveBoosts,
+  );
+  const cropsExperiment = calculateCropBreakdown(
+    farm,
+    marketPrices,
+    experimentActiveBoosts,
+  );
 
-  const costsActual = sumCosts(actualResults, globalParams);
-  const costsExperiment = sumCosts(experimentResults, globalParams);
+  const costsActual =
+    sumCosts(actualResults, globalParams) + cropsActual.costFlw;
+  const costsExperiment =
+    sumCosts(experimentResults, globalParams) + cropsExperiment.costFlw;
 
   const boostsActual = sumBoostMarginal(
     actualActiveBoosts,
@@ -123,8 +141,8 @@ export function getCategoryBreakdown(
     globalParams,
   );
 
-  const netActual = sumProfit(actualResults);
-  const netExperiment = sumProfit(experimentResults);
+  const netActual = resourcesActual + cropsActual.netFlw;
+  const netExperiment = resourcesExperiment + cropsExperiment.netFlw;
 
   const categories: CategoryValue[] = [
     buildCategory(
@@ -132,6 +150,12 @@ export function getCategoryBreakdown(
       resourcesActual,
       resourcesExperiment,
       "calculated",
+    ),
+    buildCategory(
+      "crops",
+      cropsActual.netFlw,
+      cropsExperiment.netFlw,
+      "partial",
     ),
     ...PLACEHOLDER_KEYS.map((key) => buildCategory(key, 0, 0, "placeholder")),
     buildCategory("boosts", boostsActual, boostsExperiment, "partial"),
@@ -153,6 +177,8 @@ export interface ResourceDetailLine {
   experiment: number;
   delta: number;
 }
+
+export const getCropDetailLines = getCropDetailLinesFromDomain;
 
 export function getResourceDetailLines(
   actualResults: ResourceResult[],
