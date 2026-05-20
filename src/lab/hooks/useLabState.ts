@@ -9,7 +9,7 @@ import type {
   ResourceResult,
 } from "../types";
 import { calculateResource, getActiveBoosts } from "../utils/calculations";
-import { isNftBoost, isSkillBoost } from "../utils/boosts";
+import { applyApiBoosts, isNftBoost, isSkillBoost } from "../utils/boosts";
 import { useExperiment } from "./useExperiment";
 
 export type LabMode = "actual" | "experiment";
@@ -60,8 +60,18 @@ export function useLabState(playerData?: PlayerData | null) {
     cloneResources(RESOURCE_DEFAULTS),
   );
   const [boosts, setBoosts] = useState<Boost[]>(() => cloneBoosts(BOOSTS));
-  const nfts = useMemo(() => boosts.filter(isNftBoost), [boosts]);
-  const skills = useMemo(() => boosts.filter(isSkillBoost), [boosts]);
+  const enrichedBoosts = useMemo(
+    () => applyApiBoosts(boosts, playerData ?? null),
+    [boosts, playerData],
+  );
+  const nfts = useMemo(
+    () => enrichedBoosts.filter(isNftBoost),
+    [enrichedBoosts],
+  );
+  const skills = useMemo(
+    () => enrichedBoosts.filter(isSkillBoost),
+    [enrichedBoosts],
+  );
 
   const setGlobalParam = useCallback(
     <K extends keyof GlobalParams>(key: K, value: GlobalParams[K]) => {
@@ -89,8 +99,8 @@ export function useLabState(playerData?: PlayerData | null) {
   );
 
   const actualActiveBoosts = useMemo(
-    () => getActiveBoosts(boosts, new Set(), "actual"),
-    [boosts],
+    () => getActiveBoosts(enrichedBoosts, new Set(), "actual"),
+    [enrichedBoosts],
   );
 
   const actualResults: ResourceResult[] = useMemo(
@@ -107,7 +117,7 @@ export function useLabState(playerData?: PlayerData | null) {
   );
 
   const { clearBoostFromExperiment, ...experiment } = useExperiment(
-    boosts,
+    enrichedBoosts,
     effectiveResources,
     globalParams,
     actualResults,
@@ -124,7 +134,7 @@ export function useLabState(playerData?: PlayerData | null) {
   return {
     globalParams,
     resources: effectiveResources,
-    boosts,
+    boosts: enrichedBoosts,
     nfts,
     skills,
     setGlobalParam,

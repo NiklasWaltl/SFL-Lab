@@ -9,7 +9,7 @@ import type {
   ResourceResult,
   ExperimentDelta,
 } from "../types";
-import { effectTargetsResource, isNftBoost } from "./boosts";
+import { effectTargetsResource, isBoostOwned, isNftBoost } from "./boosts";
 
 // ---------------------------------------------------------------------------
 // Hilfsfunktionen
@@ -226,11 +226,11 @@ export function getActiveBoosts(
   experimentBoostIds: ReadonlySet<string>,
   mode: "actual" | "experiment",
 ): AnyBoost[] {
-  const owned = boosts.filter((b) => b.owned);
+  const owned = boosts.filter(isBoostOwned);
   if (mode === "actual") return owned;
 
   const experimental = boosts.filter(
-    (b) => !b.owned && experimentBoostIds.has(b.id),
+    (b) => !isBoostOwned(b) && experimentBoostIds.has(b.id),
   );
   return [...owned, ...experimental];
 }
@@ -244,7 +244,7 @@ export function sumExperimentBoostPrices(
     .filter(
       (boost) =>
         isNftBoost(boost) &&
-        !boost.owned &&
+        !isBoostOwned(boost) &&
         experimentBoostIds.has(boost.id) &&
         boost.priceFlw > 0,
     )

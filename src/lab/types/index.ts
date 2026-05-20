@@ -50,6 +50,7 @@ interface BaseBoost {
   label: string;
   type: "NFT" | "SKILL";
   owned: boolean; // true = Ist-Zustand, false = Experiment
+  apiOwned?: boolean; // aus API abgeleitet, überschreibt owned-Default
   effects: BoostEffect[];
 }
 

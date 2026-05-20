@@ -21,6 +21,7 @@ import type {
 } from "../types";
 import type { LabMode } from "../hooks/useLabState";
 import { useMarketPrices } from "../hooks/useMarketPrices";
+import { isBoostOwned } from "../utils/boosts";
 import { getFarmConnectionStatusMessage } from "../utils/farmConnectionStatus";
 import { computeOverviewKpis } from "../utils/overviewKpis";
 
@@ -121,7 +122,7 @@ export function OverviewTab({
     [actualResults, experimentResults, deltas, globalParams],
   );
 
-  const ownedBoostCount = boosts.filter((b) => b.owned).length;
+  const ownedBoostCount = boosts.filter(isBoostOwned).length;
   const experimentBoostCount = experimentBoostIds.size;
 
   const woodActual = actualResults.find((r) => r.resourceId === "wood");

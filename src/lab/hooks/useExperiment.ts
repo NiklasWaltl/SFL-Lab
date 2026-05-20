@@ -12,6 +12,7 @@ import {
   getActiveBoosts,
   sumExperimentBoostPrices,
 } from "../utils/calculations";
+import { isBoostOwned } from "../utils/boosts";
 import type { LabMode } from "./useLabState";
 
 export function useExperiment(
@@ -37,7 +38,7 @@ export function useExperiment(
   const toggleExperimentBoost = useCallback(
     (id: string) => {
       const boost = boosts.find((b) => b.id === id);
-      if (!boost || boost.owned) return;
+      if (!boost || isBoostOwned(boost)) return;
 
       setExperimentBoostIds((prev) => {
         const next = new Set(prev);

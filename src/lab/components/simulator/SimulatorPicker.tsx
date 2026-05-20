@@ -1,5 +1,6 @@
 import React from "react";
 import type { FarmSkillState, NftBoost, SkillBoost } from "../../types";
+import { isBoostOwned } from "../../utils/boosts";
 import { formatNumber } from "../../utils/format";
 import { getBoostDescription } from "../../utils/simulator";
 
@@ -62,6 +63,7 @@ export function SimulatorPicker({
       <ul className="flex max-h-[260px] flex-col gap-2 overflow-y-auto pr-1">
         {nfts.map((boost) => {
           const isSelected = boost.id === selectedNftId;
+          const owned = isBoostOwned(boost);
           return (
             <li key={boost.id}>
               <button
@@ -80,7 +82,7 @@ export function SimulatorPicker({
                   <span className="rounded bg-purple-500/20 px-1.5 py-0.5 text-xs uppercase text-purple-300">
                     {boost.type}
                   </span>
-                  {boost.owned ? (
+                  {owned ? (
                     <span className="text-xs text-gray-500">{"Owned"}</span>
                   ) : (
                     <span className="text-xs text-amber-400/90">
@@ -149,6 +151,7 @@ export function SimulatorPicker({
       <ul className="flex max-h-[260px] flex-col gap-2 overflow-y-auto pr-1">
         {skills.map((skill) => {
           const isSelected = skill.id === selectedSkillId;
+          const owned = isBoostOwned(skill);
           const canSelect = canSimulateSkill(skill);
           const disabledReason = canSelect
             ? undefined
@@ -182,7 +185,7 @@ export function SimulatorPicker({
                     {skill.skillPointCost}
                     {" SP"}
                   </span>
-                  {skill.owned ? (
+                  {owned ? (
                     <span className="text-xs text-emerald-300">
                       {"Bereits gelernt"}
                     </span>

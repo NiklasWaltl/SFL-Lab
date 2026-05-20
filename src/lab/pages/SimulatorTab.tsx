@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { SimulatorPicker } from "../components/simulator/SimulatorPicker";
 import { SimulatorResult } from "../components/simulator/SimulatorResult";
 import { useSimulator } from "../hooks/useSimulator";
-import { getTotalSkillPoints } from "../utils/boosts";
+import { getTotalSkillPoints, isBoostOwned } from "../utils/boosts";
 import type { FarmSkillState, FarmState, NftBoost, SkillBoost } from "../types";
 
 const MAX_SIMULATED_FARM_LEVEL = 20;
@@ -49,11 +49,14 @@ export function SimulatorTab({
     baseState,
   });
   const simSkillPointsTotal = getTotalSkillPoints(effectiveFarmLevel);
-  const simSkillPointsSpent = selectedSkill ? selectedSkill.skillPointCost : 0;
+  const simSkillPointsSpent =
+    selectedSkill && !isBoostOwned(selectedSkill)
+      ? selectedSkill.skillPointCost
+      : 0;
   const simSkillPointsAvailable =
     simSkillPointsTotal - farmSkillState.skillPointsSpent - simSkillPointsSpent;
   const canSimulateSkill = (skill: SkillBoost): boolean =>
-    skill.owned ||
+    isBoostOwned(skill) ||
     simSkillPointsTotal - farmSkillState.skillPointsSpent >=
       skill.skillPointCost;
 
@@ -66,6 +69,7 @@ export function SimulatorTab({
 
     if (
       selectedSkill &&
+      !isBoostOwned(selectedSkill) &&
       getTotalSkillPoints(next) - farmSkillState.skillPointsSpent <
         selectedSkill.skillPointCost
     ) {

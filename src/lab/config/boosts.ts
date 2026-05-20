@@ -3,6 +3,9 @@
 
 import type { AnyBoost, NftBoost, SkillBoost } from "../types";
 
+// label muss dem SFL-Skill-/Collectible-Namen entsprechen (case-insensitive)
+// Referenz: sunflower-land/src/features/game/types/skills.ts
+
 export const NFT_BOOSTS: NftBoost[] = [
   {
     id: "woody_the_beaver",
@@ -35,7 +38,6 @@ export const NFT_BOOSTS: NftBoost[] = [
 ];
 
 export const SKILL_BOOSTS: SkillBoost[] = [
-  // TODO: owned wird später aus playerData.bumpkin.skills gesetzt.
   {
     id: "lumberjack_extra",
     label: "Lumberjack's Extra",

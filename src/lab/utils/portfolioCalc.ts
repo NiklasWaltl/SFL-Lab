@@ -5,7 +5,12 @@ import {
   calculateBoostMarginalProfit,
   calculateBoostBreakEvenDays,
 } from "./calculations";
-import { getPrimaryBoostEffect, isNftBoost, isSkillBoost } from "./boosts";
+import {
+  getPrimaryBoostEffect,
+  isBoostOwned,
+  isNftBoost,
+  isSkillBoost,
+} from "./boosts";
 
 export function buildPortfolioPositions(
   boosts: AnyBoost[],
@@ -65,7 +70,7 @@ export function buildPortfolioPositions(
       roiPercent,
       daysSincePurchase,
       earnedSoPurchaseFlw,
-      owned: b.owned,
+      owned: isBoostOwned(b),
     } satisfies PortfolioPosition;
   });
 }

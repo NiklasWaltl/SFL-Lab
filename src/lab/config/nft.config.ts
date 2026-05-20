@@ -1,6 +1,6 @@
 import type { NftBoost } from "../types";
 import type { NftAsset, NftSimulationParams } from "../types";
-import { getPrimaryBoostEffect } from "../utils/boosts";
+import { getPrimaryBoostEffect, isBoostOwned } from "../utils/boosts";
 
 /** Default simulation parameters for the NFT simulator tab */
 export const NFT_DEFAULT_PARAMS: Readonly<NftSimulationParams> = {
@@ -21,7 +21,7 @@ export function boostToNftAsset(boost: NftBoost): NftAsset {
     label: boost.label,
     basePrice: boost.priceFlw,
     type: boost.type,
-    owned: boost.owned,
+    owned: isBoostOwned(boost),
     resource: effect.resource,
     boostType: effect.effectType,
     effectValue: effect.value,

@@ -14,7 +14,7 @@ import {
   formatDelta,
   formatNumber,
 } from "../../utils/format";
-import { getPrimaryBoostEffect } from "../../utils/boosts";
+import { getPrimaryBoostEffect, isBoostOwned } from "../../utils/boosts";
 import { getBoostAffectedCategoryKeys } from "../../utils/simulator";
 
 export interface SimulatorResultProps {
@@ -36,7 +36,7 @@ function getInsightMessage(
 ): string | null {
   if (selectedBoosts.length === 0 || !enabled) return null;
 
-  if (selectedBoosts.every((boost) => boost.owned)) {
+  if (selectedBoosts.every(isBoostOwned)) {
     return "Dieser Boost ist bereits auf deiner Farm aktiv – kein zusätzlicher Effekt.";
   }
 
@@ -239,7 +239,7 @@ export function SimulatorResult({
             <p
               className={`rounded-lg px-3 py-2 text-sm ${
                 impact.totalDelta > 0.01 &&
-                selectedBoosts.some((boost) => !boost.owned)
+                selectedBoosts.some((boost) => !isBoostOwned(boost))
                   ? "border border-green-500/30 bg-green-500/10 text-green-200"
                   : "border border-[#3e2731]/50 bg-[#0f0d1a] text-gray-300"
               }`}

@@ -12,6 +12,7 @@ import type {
   SkillBoost,
 } from "../types";
 import { applyBoosts, calculateResource } from "../utils/calculations";
+import { isBoostOwned } from "../utils/boosts";
 import { getCategoryBreakdown } from "../utils/categoryBreakdown";
 import {
   calculateSimulatorImpact,
@@ -92,7 +93,7 @@ export function useSimulator({
   );
 
   const ownedBoosts = useMemo(
-    () => [...nfts, ...skills].filter((boost) => boost.owned),
+    () => [...nfts, ...skills].filter(isBoostOwned),
     [nfts, skills],
   );
 
@@ -113,7 +114,9 @@ export function useSimulator({
 
   const activeSelection = useMemo(
     () =>
-      params.enabled ? selectedBoosts.filter((boost) => !boost.owned) : [],
+      params.enabled
+        ? selectedBoosts.filter((boost) => !isBoostOwned(boost))
+        : [],
     [params.enabled, selectedBoosts],
   );
 
@@ -127,14 +130,18 @@ export function useSimulator({
   );
 
   const nftOnlyResults = useMemo(() => {
-    if (!params.enabled || selectedNft === null || selectedNft.owned) {
+    if (!params.enabled || selectedNft === null || isBoostOwned(selectedNft)) {
       return actualResults;
     }
     return calculateResults(applyBoosts(actualState, [selectedNft]));
   }, [actualState, actualResults, params.enabled, selectedNft]);
 
   const skillOnlyResults = useMemo(() => {
-    if (!params.enabled || selectedSkill === null || selectedSkill.owned) {
+    if (
+      !params.enabled ||
+      selectedSkill === null ||
+      isBoostOwned(selectedSkill)
+    ) {
       return actualResults;
     }
     return calculateResults(applyBoosts(actualState, [selectedSkill]));

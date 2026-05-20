@@ -5,7 +5,7 @@ import type {
   ResourceResult,
   SimulatorImpact,
 } from "../types";
-import { isNftBoost } from "./boosts";
+import { isBoostOwned, isNftBoost } from "./boosts";
 
 const EMPTY_IMPACT: SimulatorImpact = {
   totalDelta: 0,
@@ -18,11 +18,14 @@ export function getSimulatorBoostOptions<TBoost extends AnyBoost>(
   boosts: TBoost[],
 ): TBoost[] {
   return [...boosts].sort((a, b) => {
+    const aOwned = isBoostOwned(a);
+    const bOwned = isBoostOwned(b);
+
     if (a.type !== b.type) {
       return a.type === "NFT" ? -1 : 1;
     }
-    if (a.owned !== b.owned) {
-      return a.owned ? 1 : -1;
+    if (aOwned !== bOwned) {
+      return aOwned ? 1 : -1;
     }
     return a.label.localeCompare(b.label, "de");
   });
