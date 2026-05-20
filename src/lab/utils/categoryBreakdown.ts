@@ -25,13 +25,9 @@ function sumProfit(results: ResourceResult[]): number {
 }
 
 /** Gleiche Semantik wie overviewKpis.totalCostsPerDay */
-function sumCosts(
-  results: ResourceResult[],
-  globalParams: GlobalParams,
-): number {
+function sumCosts(results: ResourceResult[]): number {
   return results.reduce((sum, r) => {
-    const coinAsFlw = r.coinCostPerDay / globalParams.coinToFlowerRatio;
-    return sum + coinAsFlw + r.flwCostPerDay;
+    return sum + r.flwCostPerDay + r.woodCostFlwPerDay;
   }, 0);
 }
 
@@ -129,10 +125,8 @@ export function getCategoryBreakdown(
     globalParams.coinToFlowerRatio,
   );
 
-  const costsActual =
-    sumCosts(actualResults, globalParams) + cropsActual.costFlw;
-  const costsExperiment =
-    sumCosts(experimentResults, globalParams) + cropsExperiment.costFlw;
+  const costsActual = sumCosts(actualResults) + cropsActual.costFlw;
+  const costsExperiment = sumCosts(experimentResults) + cropsExperiment.costFlw;
 
   const boostsActual = sumBoostMarginal(
     actualActiveBoosts,
@@ -212,6 +206,7 @@ export interface CostDetailLine {
   coinCostFlw: number;
   flwCostPerDay: number;
   woodCostPerDay?: number;
+  woodCostFlwPerDay: number;
   total: number;
 }
 
@@ -223,13 +218,14 @@ export function getCostDetailLines(
   return results.map((r) => {
     const config = resources.find((c) => c.id === r.resourceId);
     const coinCostFlw = r.coinCostPerDay / globalParams.coinToFlowerRatio;
-    const total = coinCostFlw + r.flwCostPerDay;
+    const total = r.flwCostPerDay + r.woodCostFlwPerDay;
     return {
       resourceId: r.resourceId,
       label: config?.label ?? r.resourceId,
       coinCostFlw,
       flwCostPerDay: r.flwCostPerDay,
       woodCostPerDay: r.woodCostPerDay,
+      woodCostFlwPerDay: r.woodCostFlwPerDay,
       total,
     };
   });

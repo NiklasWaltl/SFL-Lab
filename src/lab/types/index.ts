@@ -86,6 +86,7 @@ export interface ResourceResult {
   productionPerDay: number;
   coinCostPerDay: number;
   woodCostPerDay?: number;
+  woodCostFlwPerDay: number;
   flwCostPerDay: number;
   p2pRevenueFlw: number;
   p2pProfitFlw: number;

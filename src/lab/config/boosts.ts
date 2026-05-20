@@ -35,12 +35,13 @@ export const NFT_BOOSTS: NftBoost[] = [
 ];
 
 export const SKILL_BOOSTS: SkillBoost[] = [
+  // TODO: owned wird später aus playerData.bumpkin.skills gesetzt.
   {
     id: "lumberjack_extra",
     label: "Lumberjack's Extra",
     type: "SKILL",
     skillPointCost: 1,
-    owned: true,
+    owned: false,
     effects: [
       {
         resource: "wood",

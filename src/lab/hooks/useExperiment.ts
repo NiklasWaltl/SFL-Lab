@@ -62,7 +62,12 @@ export function useExperiment(
   const experimentResults: ResourceResult[] = useMemo(
     () =>
       resources.map((r) =>
-        calculateResource(r, globalParams, experimentActiveBoosts),
+        calculateResource(
+          r,
+          globalParams,
+          experimentActiveBoosts,
+          globalParams.marketPriceWood,
+        ),
       ),
     [resources, globalParams, experimentActiveBoosts],
   );

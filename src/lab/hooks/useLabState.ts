@@ -4,6 +4,7 @@ import { RESOURCE_DEFAULTS } from "../config/resources";
 import type {
   Boost,
   GlobalParams,
+  PlayerData,
   ResourceConfig,
   ResourceResult,
 } from "../types";
@@ -14,9 +15,9 @@ import { useExperiment } from "./useExperiment";
 export type LabMode = "actual" | "experiment";
 
 const DEFAULT_GLOBAL_PARAMS: GlobalParams = {
-  coinToFlowerRatio: 1000,
-  marketPriceWood: 0.05,
-  marketPriceStone: 0.08,
+  coinToFlowerRatio: 320, // Referenz: 5120 Coins/Tag ÷ 16 FLW/Tag (Wood)
+  marketPriceWood: 0.018, // P2P-Referenz aus Game
+  marketPriceStone: 0.0265, // P2P-Referenz aus Game
   cropPrices: {},
 };
 
@@ -31,7 +32,27 @@ function cloneResources(resources: ResourceConfig[]): ResourceConfig[] {
   return resources.map((r) => ({ ...r }));
 }
 
-export function useLabState() {
+function applyPlayerNodeCounts(
+  resources: ResourceConfig[],
+  playerData?: PlayerData | null,
+): ResourceConfig[] {
+  const trees = playerData?.resources?.trees;
+  const stones = playerData?.resources?.stones;
+
+  return resources.map((resource) => {
+    if (resource.id === "wood" && typeof trees === "number" && trees > 0) {
+      return { ...resource, nodeCount: trees };
+    }
+
+    if (resource.id === "stone" && typeof stones === "number" && stones > 0) {
+      return { ...resource, nodeCount: stones };
+    }
+
+    return resource;
+  });
+}
+
+export function useLabState(playerData?: PlayerData | null) {
   const [globalParams, setGlobalParamsState] = useState<GlobalParams>(
     DEFAULT_GLOBAL_PARAMS,
   );
@@ -62,6 +83,11 @@ export function useLabState() {
     [],
   );
 
+  const effectiveResources = useMemo(
+    () => applyPlayerNodeCounts(resources, playerData),
+    [resources, playerData],
+  );
+
   const actualActiveBoosts = useMemo(
     () => getActiveBoosts(boosts, new Set(), "actual"),
     [boosts],
@@ -69,15 +95,20 @@ export function useLabState() {
 
   const actualResults: ResourceResult[] = useMemo(
     () =>
-      resources.map((r) =>
-        calculateResource(r, globalParams, actualActiveBoosts),
+      effectiveResources.map((r) =>
+        calculateResource(
+          r,
+          globalParams,
+          actualActiveBoosts,
+          globalParams.marketPriceWood,
+        ),
       ),
-    [resources, globalParams, actualActiveBoosts],
+    [effectiveResources, globalParams, actualActiveBoosts],
   );
 
   const { clearBoostFromExperiment, ...experiment } = useExperiment(
     boosts,
-    resources,
+    effectiveResources,
     globalParams,
     actualResults,
   );
@@ -92,7 +123,7 @@ export function useLabState() {
 
   return {
     globalParams,
-    resources,
+    resources: effectiveResources,
     boosts,
     nfts,
     skills,

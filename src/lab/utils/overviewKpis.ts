@@ -23,7 +23,7 @@ export function computeOverviewKpis(
   );
 
   const totalCostsPerDay = actualResults.reduce(
-    (sum, r) => sum + r.flwCostPerDay,
+    (sum, r) => sum + r.flwCostPerDay + r.woodCostFlwPerDay,
     0,
   );
 

@@ -19,8 +19,10 @@ export const RESOURCE_DEFAULTS: ResourceConfig[] = [
     nodeCount: 20,
     yieldPerNode: 2.2,
     recoveryMinutes: 192, // 3h 12min
-    toolCostCoins: 16,
-    toolCostWood: 3,
+    // toolCostCoins Stone: ~44 Coins/Chop
+    // Ableitung: 6635 Coins/Tag ÷ 150 Chops/Tag (20 Nodes × 7.5 Cycles)
+    // Offiziell: Stone Pickaxe ~880 Coins, ~20 Nutzungen = 44/Chop
+    toolCostCoins: 44,
     toolDurability: 1,
   },
 ];

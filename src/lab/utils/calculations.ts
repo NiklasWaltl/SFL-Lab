@@ -132,6 +132,7 @@ export function calculateResource(
   config: ResourceConfig,
   params: GlobalParams,
   activeBoosts: AnyBoost[],
+  marketPriceWood: number,
 ): ResourceResult {
   const recovery = effectiveRecovery(
     config.recoveryMinutes,
@@ -167,9 +168,13 @@ export function calculateResource(
 
   // P2P Revenue & Profit
   const marketPrice =
-    config.id === "wood" ? params.marketPriceWood : params.marketPriceStone;
+    config.id === "wood" ? marketPriceWood : params.marketPriceStone;
+  const woodCostFlwPerDay =
+    woodCostPerDay !== undefined && marketPriceWood > 0
+      ? woodCostPerDay * marketPriceWood * 0.9
+      : 0;
   const p2pRevenueFlw = productionPerDay * marketPrice * 0.9; // -10% P2P Fee
-  const p2pProfitFlw = p2pRevenueFlw - flwCostPerDay;
+  const p2pProfitFlw = p2pRevenueFlw - flwCostPerDay - woodCostFlwPerDay;
 
   return {
     resourceId: config.id,
@@ -177,6 +182,7 @@ export function calculateResource(
     productionPerDay,
     coinCostPerDay,
     woodCostPerDay,
+    woodCostFlwPerDay,
     flwCostPerDay,
     p2pRevenueFlw,
     p2pProfitFlw,
@@ -262,8 +268,18 @@ export function calculateBoostMarginalProfit(
     if (!affectsConfig) {
       continue;
     }
-    const baseline = calculateResource(config, params, baseActiveBoosts);
-    const boosted = calculateResource(config, params, withBoost);
+    const baseline = calculateResource(
+      config,
+      params,
+      baseActiveBoosts,
+      params.marketPriceWood,
+    );
+    const boosted = calculateResource(
+      config,
+      params,
+      withBoost,
+      params.marketPriceWood,
+    );
     marginal += boosted.p2pProfitFlw - baseline.p2pProfitFlw;
   }
 

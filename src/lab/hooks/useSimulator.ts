@@ -31,7 +31,12 @@ function compactBoosts(boosts: Array<AnyBoost | null>): AnyBoost[] {
 
 function calculateResults(state: FarmState): ResourceResult[] {
   return state.resources.map((resource) =>
-    calculateResource(resource, state.globalParams, []),
+    calculateResource(
+      resource,
+      state.globalParams,
+      [],
+      state.globalParams.marketPriceWood,
+    ),
   );
 }
 

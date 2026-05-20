@@ -358,6 +358,9 @@ function CostDetails({
                 <>
                   {" · Wood/Tag: "}
                   {formatNumber(line.woodCostPerDay)}
+                  {" ("}
+                  {formatNumber(line.woodCostFlwPerDay)}
+                  {" FLW)"}
                 </>
               )}
             </p>

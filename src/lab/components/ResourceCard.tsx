@@ -78,10 +78,17 @@ export function ResourceCard({
           unit="FLW"
         />
         {result.woodCostPerDay !== undefined && (
-          <MetricRow
-            label="Wood-Kosten/Tag"
-            value={formatNumber(result.woodCostPerDay)}
-          />
+          <>
+            <MetricRow
+              label="Wood-Kosten/Tag"
+              value={formatNumber(result.woodCostPerDay)}
+            />
+            <MetricRow
+              label="Wood-Kosten/Tag (FLW)"
+              value={formatNumber(result.woodCostFlwPerDay)}
+              unit="FLW"
+            />
+          </>
         )}
         <MetricRow
           label="P2P Revenue/Tag"

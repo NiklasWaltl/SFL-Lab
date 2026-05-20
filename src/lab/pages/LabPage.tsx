@@ -76,7 +76,6 @@ function formatFetchedAt(date: Date | null): string {
 
 export function LabPage() {
   const [activeTab, setActiveTab] = useState<TabId>("overview");
-  const lab = useLabState();
   const scenarioPersistence = useScenarioPersistence();
   const {
     farmId,
@@ -89,6 +88,7 @@ export function LabPage() {
     isMock,
     fetchedAt,
   } = usePlayerData();
+  const lab = useLabState(playerData);
   const [connectionAttempted, setConnectionAttempted] = useState(false);
 
   function handleConnect(
