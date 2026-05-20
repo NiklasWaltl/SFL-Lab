@@ -114,6 +114,7 @@ export type {
   CropConfig,
   CropDetailLine,
   CropName,
+  CropPriceSource,
 } from "./crops";
 export type { MarketPriceMap, MarketPricesResponse } from "./market";
 export type {

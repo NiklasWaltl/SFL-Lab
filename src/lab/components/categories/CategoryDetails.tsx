@@ -24,6 +24,10 @@ interface CategoryDetailsProps {
 
 const PLACEHOLDER_KEYS = new Set(["animals", "crafting", "trading"]);
 
+function formatNullableNumber(value: number | null): string {
+  return value === null ? "–" : formatNumber(value);
+}
+
 export function CategoryDetails({
   category,
   detailContext,
@@ -156,8 +160,16 @@ function CropDetails({
               <p className="text-xs text-gray-500">
                 {line.plotCount}
                 {" Plot(s) · "}
-                {formatNumber(line.priceFlw)}
-                {" FLW/Stk."}
+                {line.priceSource === "missing" || line.priceFlw === null ? (
+                  <span className="text-amber-300">
+                    {"Kein Marktpreis verfügbar"}
+                  </span>
+                ) : (
+                  <>
+                    {formatNumber(line.priceFlw)}
+                    {" FLW/Stk."}
+                  </>
+                )}
               </p>
             </div>
             <p className="mt-1 text-sm text-gray-400">
@@ -172,13 +184,13 @@ function CropDetails({
             </p>
             <p className="mt-1 text-sm text-gray-400">
               {"Umsatz: "}
-              {formatNumber(line.actualRevenueFlw)}
+              {formatNullableNumber(line.actualRevenueFlw)}
               {" · Seeds: "}
               {formatNumber(line.actualSeedCostFlw)}
               {isExperimentView && (
                 <>
                   {" · Exp Umsatz: "}
-                  {formatNumber(line.experimentRevenueFlw)}
+                  {formatNullableNumber(line.experimentRevenueFlw)}
                   {" · Exp Seeds: "}
                   {formatNumber(line.experimentSeedCostFlw)}
                 </>
@@ -186,16 +198,21 @@ function CropDetails({
             </p>
             <p className="mt-1 text-sm text-gray-300">
               {"Netto: "}
-              {formatNumber(line.actualNetFlw)}
-              {" FLW/Tag"}
+              {formatNullableNumber(line.actualNetFlw)}
+              {line.actualNetFlw !== null && " FLW/Tag"}
               {isExperimentView && (
                 <>
                   {" / "}
-                  {formatNumber(line.experimentNetFlw)}
-                  {" FLW/Tag · "}
-                  <span className={deltaColorClass(line.delta)}>
-                    {formatDelta(line.delta)}
-                  </span>
+                  {formatNullableNumber(line.experimentNetFlw)}
+                  {line.experimentNetFlw !== null && " FLW/Tag"}
+                  {line.delta !== null && (
+                    <>
+                      {" · "}
+                      <span className={deltaColorClass(line.delta)}>
+                        {formatDelta(line.delta)}
+                      </span>
+                    </>
+                  )}
                 </>
               )}
             </p>

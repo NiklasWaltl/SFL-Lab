@@ -25,12 +25,13 @@ function isCropName(name: string | undefined): name is CropName {
 function getCropPrice(
   config: CropConfig,
   marketPrices: MarketPriceMap,
-): number {
-  return (
+): number | null {
+  const price =
     marketPrices[config.marketKey] ??
     marketPrices[config.marketKey.toLowerCase()] ??
-    0
-  );
+    null;
+
+  return typeof price === "number" && Number.isFinite(price) ? price : null;
 }
 
 function cropBoostApplies(effect: BoostEffect, cropName: CropName): boolean {
@@ -128,7 +129,9 @@ export function calculateCropBreakdown(
     const seedCostPerDay =
       boosted.plotCount * cyclesPerDay * aggregate.config.seedCostFlw;
     const priceFlw = getCropPrice(aggregate.config, marketPrices);
-    const revenueFlw = productionPerDay * priceFlw;
+    const priceSource = priceFlw === null ? "missing" : "market";
+    const revenueFlw = priceFlw === null ? null : productionPerDay * priceFlw;
+    const netFlw = revenueFlw === null ? null : revenueFlw - seedCostPerDay;
 
     return {
       cropName: aggregate.config.name,
@@ -139,15 +142,16 @@ export function calculateCropBreakdown(
       productionPerDay,
       seedCostPerDay,
       priceFlw,
+      priceSource,
       revenueFlw,
-      netFlw: revenueFlw - seedCostPerDay,
+      netFlw,
     };
   });
 
   return {
-    revenueFlw: lines.reduce((sum, line) => sum + line.revenueFlw, 0),
+    revenueFlw: lines.reduce((sum, line) => sum + (line.revenueFlw ?? 0), 0),
     costFlw: lines.reduce((sum, line) => sum + line.seedCostPerDay, 0),
-    netFlw: lines.reduce((sum, line) => sum + line.netFlw, 0),
+    netFlw: lines.reduce((sum, line) => sum + (line.netFlw ?? 0), 0),
     lines,
   };
 }
@@ -184,16 +188,24 @@ export function getCropDetailLines(
         cropName: config.name,
         label: config.label,
         plotCount: actualLine?.plotCount ?? experimentLine?.plotCount ?? 0,
-        priceFlw: actualLine?.priceFlw ?? experimentLine?.priceFlw ?? 0,
+        priceFlw: actualLine?.priceFlw ?? experimentLine?.priceFlw ?? null,
+        priceSource:
+          actualLine?.priceSource ?? experimentLine?.priceSource ?? "missing",
         actualProductionPerDay: actualLine?.productionPerDay ?? 0,
         experimentProductionPerDay: experimentLine?.productionPerDay ?? 0,
-        actualRevenueFlw: actualLine?.revenueFlw ?? 0,
-        experimentRevenueFlw: experimentLine?.revenueFlw ?? 0,
+        actualRevenueFlw: actualLine?.revenueFlw ?? null,
+        experimentRevenueFlw: experimentLine?.revenueFlw ?? null,
         actualSeedCostFlw: actualLine?.seedCostPerDay ?? 0,
         experimentSeedCostFlw: experimentLine?.seedCostPerDay ?? 0,
-        actualNetFlw: actualLine?.netFlw ?? 0,
-        experimentNetFlw: experimentLine?.netFlw ?? 0,
-        delta: (experimentLine?.netFlw ?? 0) - (actualLine?.netFlw ?? 0),
+        actualNetFlw: actualLine?.netFlw ?? null,
+        experimentNetFlw: experimentLine?.netFlw ?? null,
+        delta:
+          actualLine?.netFlw === null ||
+          actualLine?.netFlw === undefined ||
+          experimentLine?.netFlw === null ||
+          experimentLine?.netFlw === undefined
+            ? null
+            : experimentLine.netFlw - actualLine.netFlw,
       },
     ];
   });

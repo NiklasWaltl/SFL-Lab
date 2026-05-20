@@ -31,6 +31,8 @@ export interface CropConfig {
   harvestMinutes: number;
 }
 
+export type CropPriceSource = "market" | "missing";
+
 export interface CropCalculationLine {
   cropName: CropName;
   label: string;
@@ -39,9 +41,10 @@ export interface CropCalculationLine {
   cyclesPerDay: number;
   productionPerDay: number;
   seedCostPerDay: number;
-  priceFlw: number;
-  revenueFlw: number;
-  netFlw: number;
+  priceFlw: number | null;
+  priceSource: CropPriceSource;
+  revenueFlw: number | null;
+  netFlw: number | null;
 }
 
 export interface CropBreakdown {
@@ -55,14 +58,15 @@ export interface CropDetailLine {
   cropName: CropName;
   label: string;
   plotCount: number;
-  priceFlw: number;
+  priceFlw: number | null;
+  priceSource: CropPriceSource;
   actualProductionPerDay: number;
   experimentProductionPerDay: number;
-  actualRevenueFlw: number;
-  experimentRevenueFlw: number;
+  actualRevenueFlw: number | null;
+  experimentRevenueFlw: number | null;
   actualSeedCostFlw: number;
   experimentSeedCostFlw: number;
-  actualNetFlw: number;
-  experimentNetFlw: number;
-  delta: number;
+  actualNetFlw: number | null;
+  experimentNetFlw: number | null;
+  delta: number | null;
 }

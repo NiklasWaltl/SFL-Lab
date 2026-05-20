@@ -19,7 +19,7 @@ export interface UseMarketPricesResult {
 }
 
 export function useMarketPrices(): UseMarketPricesResult {
-  const [prices, setPrices] = useState<ResourcePrices | null>(null);
+  const [prices, setPrices] = useState<MarketPriceMap | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLive, setIsLive] = useState(false);
