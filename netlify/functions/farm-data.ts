@@ -14,6 +14,7 @@ function parseFarmId(value: string | undefined): number | null {
 
 export const handler: Handler = async (event) => {
   const farmId = parseFarmId(event.queryStringParameters?.id);
+  const apiKey = event.headers["x-api-key"];
 
   if (!farmId) {
     return {
@@ -23,9 +24,22 @@ export const handler: Handler = async (event) => {
     };
   }
 
+  if (!apiKey) {
+    return {
+      statusCode: 400,
+      headers: CACHE_HEADERS,
+      body: JSON.stringify({ error: "Missing x-api-key header" }),
+    };
+  }
+
   try {
     const res = await fetch(
       `https://api.sunflower-land.com/community/farms/${farmId}`,
+      {
+        headers: {
+          "x-api-key": apiKey,
+        },
+      },
     );
     const body = await res.text();
 
