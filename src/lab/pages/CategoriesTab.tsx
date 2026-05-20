@@ -16,9 +16,12 @@ import type {
 } from "../types";
 import { getCategoryBreakdown } from "../utils/categoryBreakdown";
 import { getCategorySummary } from "../utils/categorySummary";
+import { getFarmConnectionStatusMessage } from "../utils/farmConnectionStatus";
 import { deltaColorClass, formatDelta, formatNumber } from "../utils/format";
 
 export interface CategoriesTabProps {
+  farmId: number | null;
+  apiKey: string | null;
   mode: LabMode;
   farm: NormalizedFarm | null;
   actualResults: ResourceResult[];
@@ -28,6 +31,7 @@ export interface CategoriesTabProps {
   loading: boolean;
   isMock: boolean;
   error: string | null;
+  connectionAttempted: boolean;
   globalParams: GlobalParams;
   resources: ResourceConfig[];
   boosts: Boost[];
@@ -36,6 +40,8 @@ export interface CategoriesTabProps {
 }
 
 export function CategoriesTab({
+  farmId,
+  apiKey,
   mode,
   farm,
   actualResults,
@@ -45,6 +51,7 @@ export function CategoriesTab({
   loading,
   isMock,
   error,
+  connectionAttempted,
   globalParams,
   resources,
   boosts,
@@ -53,6 +60,13 @@ export function CategoriesTab({
 }: CategoriesTabProps) {
   const [expandedKey, setExpandedKey] = useState<CategoryKey | null>(null);
   const isExperimentView = mode === "experiment";
+  const connectionStatusMessage = getFarmConnectionStatusMessage({
+    farmId,
+    apiKey,
+    isMock,
+    error,
+    connectionAttempted,
+  });
 
   const categories = useMemo(
     () =>
@@ -141,21 +155,21 @@ export function CategoriesTab({
 
   return (
     <article className="flex flex-col gap-6">
-      {isMock && (
+      {connectionStatusMessage?.variant === "warning" && (
         <p
           className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200"
           role="status"
         >
-          {"Keine echten Farmdaten – Farm-ID fehlt"}
+          {connectionStatusMessage.text}
         </p>
       )}
 
-      {error && (
+      {connectionStatusMessage?.variant === "error" && (
         <p
           className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300"
           role="alert"
         >
-          {error}
+          {connectionStatusMessage.text}
         </p>
       )}
 

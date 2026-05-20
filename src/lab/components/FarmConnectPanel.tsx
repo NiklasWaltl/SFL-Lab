@@ -3,29 +3,28 @@ import React, { useState } from "react";
 interface FarmConnectPanelProps {
   farmId: number | null;
   apiKey: string | null;
-  onSubmit: (farmId: number, apiKey: string) => void;
+  onConnect: (farmId: number | null, apiKey: string | null) => void;
   onClear: () => void;
 }
 
 export function FarmConnectPanel({
   farmId,
   apiKey,
-  onSubmit,
+  onConnect,
   onClear,
 }: FarmConnectPanelProps) {
   const [farmIdValue, setFarmIdValue] = useState("");
   const [apiKeyValue, setApiKeyValue] = useState("");
-  const parsedFarmId = Number(farmIdValue);
-  const isValidFarmId = Number.isFinite(parsedFarmId) && parsedFarmId > 0;
-  const isValidApiKey = apiKeyValue.trim().length > 0;
-  const canConnect = isValidFarmId && isValidApiKey;
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!canConnect) return;
+    const parsedFarmId = Number(farmIdValue);
+    const submittedFarmId =
+      Number.isFinite(parsedFarmId) && parsedFarmId > 0 ? parsedFarmId : null;
+    const submittedApiKey = apiKeyValue.trim() || null;
 
-    onSubmit(parsedFarmId, apiKeyValue.trim());
+    onConnect(submittedFarmId, submittedApiKey);
   }
 
   function handleClear() {
@@ -80,8 +79,7 @@ export function FarmConnectPanel({
         <div className="flex flex-wrap gap-2">
           <button
             type="submit"
-            disabled={!canConnect}
-            className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-[#181425] hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-amber-500"
+            className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-[#181425] hover:bg-amber-400"
           >
             {"Verbinden"}
           </button>

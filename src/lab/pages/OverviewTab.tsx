@@ -21,13 +21,14 @@ import type {
 } from "../types";
 import type { LabMode } from "../hooks/useLabState";
 import { useMarketPrices } from "../hooks/useMarketPrices";
+import { getFarmConnectionStatusMessage } from "../utils/farmConnectionStatus";
 import { computeOverviewKpis } from "../utils/overviewKpis";
 
 export interface OverviewTabProps {
   farmId: number | null;
-  setFarmId: (id: number | null) => void;
   apiKey: string | null;
-  setApiKey: (key: string | null) => void;
+  onConnect: (farmId: number | null, apiKey: string | null) => void;
+  onDisconnect: () => void;
   mode: LabMode;
   playerData: PlayerData | null;
   farm: NormalizedFarm | null;
@@ -37,6 +38,7 @@ export interface OverviewTabProps {
   loading: boolean;
   isMock: boolean;
   error: string | null;
+  connectionAttempted: boolean;
   globalParams: GlobalParams;
   setGlobalParam: <K extends keyof GlobalParams>(
     key: K,
@@ -55,9 +57,9 @@ export interface OverviewTabProps {
 
 export function OverviewTab({
   farmId,
-  setFarmId,
   apiKey,
-  setApiKey,
+  onConnect,
+  onDisconnect,
   mode,
   playerData,
   farm,
@@ -67,6 +69,7 @@ export function OverviewTab({
   loading,
   isMock,
   error,
+  connectionAttempted,
   globalParams,
   setGlobalParam,
   resources,
@@ -135,6 +138,17 @@ export function OverviewTab({
 
   const isExperimentView = mode === "experiment";
   const displayFarm = !isMock && playerData?.farmId ? farm : null;
+  const farmNftId = playerData?.nftId;
+  const farmNftOpenSeaUrl = farmNftId
+    ? `https://opensea.io/assets/matic/${SFL_FARM_NFT_CONTRACT_ADDRESS}/${farmNftId}`
+    : null;
+  const connectionStatusMessage = getFarmConnectionStatusMessage({
+    farmId,
+    apiKey,
+    isMock,
+    error,
+    connectionAttempted,
+  });
 
   if (loading) {
     return (
@@ -142,14 +156,8 @@ export function OverviewTab({
         <FarmConnectPanel
           farmId={farmId}
           apiKey={apiKey}
-          onSubmit={(id, key) => {
-            setFarmId(id);
-            setApiKey(key);
-          }}
-          onClear={() => {
-            setFarmId(null);
-            setApiKey(null);
-          }}
+          onConnect={onConnect}
+          onClear={onDisconnect}
         />
         <section className="flex min-h-[200px] items-center justify-center rounded-xl border border-[#3e2731]/40 bg-[#181425] p-8">
           <p className="text-gray-400">{"Farmdaten werden geladen…"}</p>
@@ -163,43 +171,37 @@ export function OverviewTab({
       <FarmConnectPanel
         farmId={farmId}
         apiKey={apiKey}
-        onSubmit={(id, key) => {
-          setFarmId(id);
-          setApiKey(key);
-        }}
-        onClear={() => {
-          setFarmId(null);
-          setApiKey(null);
-        }}
+        onConnect={onConnect}
+        onClear={onDisconnect}
       />
 
-      {isMock && (
+      {connectionStatusMessage?.variant === "warning" && (
         <p
           className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200"
           role="status"
         >
-          {"Keine echten Farmdaten – Farm-ID fehlt"}
+          {connectionStatusMessage.text}
         </p>
       )}
 
-      {error && (
+      {connectionStatusMessage?.variant === "error" && (
         <p
           className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300"
           role="alert"
         >
-          {error}
+          {connectionStatusMessage.text}
         </p>
       )}
 
-      {!isMock && playerData?.nftId && (
+      {!isMock && farmNftId && farmNftOpenSeaUrl && (
         <a
-          href={`https://opensea.io/assets/matic/${SFL_FARM_NFT_CONTRACT_ADDRESS}/${playerData.nftId}`}
+          href={farmNftOpenSeaUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="w-fit rounded-lg border border-[#3e2731]/60 bg-[#181425] px-4 py-2 text-sm font-medium text-amber-200 transition-colors hover:border-amber-400/60 hover:text-amber-100"
         >
           {"NFT #"}
-          {playerData.nftId}
+          {farmNftId}
           {" →"}
         </a>
       )}

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { LabTabNav, TABS, type TabId } from "../components/LabTabNav";
 import { TabPlaceholder } from "../components/TabPlaceholder";
 import { useFarmSkillState } from "../hooks/useFarmSkillState";
@@ -89,6 +89,51 @@ export function LabPage() {
     isMock,
     fetchedAt,
   } = usePlayerData();
+  const [connectionAttempted, setConnectionAttempted] = useState(false);
+
+  function handleConnect(
+    submittedFarmId: number | null,
+    submittedApiKey: string | null,
+  ) {
+    setConnectionAttempted(true);
+
+    const parsedId =
+      submittedFarmId !== null &&
+      Number.isFinite(submittedFarmId) &&
+      submittedFarmId > 0
+        ? submittedFarmId
+        : null;
+    const trimmedKey = submittedApiKey?.trim() || null;
+
+    if (!parsedId) {
+      setFarmId(null);
+      setApiKey(trimmedKey);
+      return;
+    }
+
+    if (!trimmedKey) {
+      setFarmId(parsedId);
+      setApiKey(null);
+      return;
+    }
+
+    setFarmId(parsedId);
+    setApiKey(trimmedKey);
+  }
+
+  function handleDisconnect() {
+    setFarmId(null);
+    setApiKey(null);
+    setConnectionAttempted(false);
+  }
+
+  useEffect(() => {
+    if (farmId && apiKey) {
+      handleConnect(farmId, apiKey);
+    }
+    // Only auto-connect once with the initial localStorage-backed values.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const farm = useMemo(
     () => (playerData ? normalizeFarm(playerData) : null),
@@ -144,9 +189,9 @@ export function LabPage() {
           {activeTab === "overview" && (
             <OverviewTab
               farmId={farmId}
-              setFarmId={setFarmId}
               apiKey={apiKey}
-              setApiKey={setApiKey}
+              onConnect={handleConnect}
+              onDisconnect={handleDisconnect}
               mode={lab.mode}
               playerData={playerData}
               farm={farm}
@@ -156,6 +201,7 @@ export function LabPage() {
               loading={loading}
               isMock={isMock}
               error={error}
+              connectionAttempted={connectionAttempted}
               globalParams={lab.globalParams}
               setGlobalParam={lab.setGlobalParam}
               resources={lab.resources}
@@ -172,6 +218,8 @@ export function LabPage() {
 
           {activeTab === "categories" && (
             <CategoriesTab
+              farmId={farmId}
+              apiKey={apiKey}
               mode={lab.mode}
               farm={farm}
               actualResults={lab.actualResults}
@@ -181,6 +229,7 @@ export function LabPage() {
               loading={loading}
               isMock={isMock}
               error={error}
+              connectionAttempted={connectionAttempted}
               globalParams={lab.globalParams}
               resources={lab.resources}
               boosts={boosts}
