@@ -66,11 +66,15 @@ export function OverviewTab({
     error: pricesError,
     isLive: pricesAreLive,
     lastUpdated: pricesLastUpdated,
+    fetchedAt: pricesFetchedAt,
+    isPriceManuallyOverridden,
+    markPriceManuallyOverridden,
     refresh: refreshMarketPrices,
   } = useMarketPrices();
 
   useEffect(() => {
     if (!marketPrices) return;
+    if (isPriceManuallyOverridden) return;
 
     const wood = marketPrices.Wood ?? marketPrices.wood;
     const stone = marketPrices.Stone ?? marketPrices.stone;
@@ -81,7 +85,7 @@ export function OverviewTab({
     if (typeof stone === "number" && stone > 0) {
       setGlobalParam("marketPriceStone", stone);
     }
-  }, [marketPrices, setGlobalParam]);
+  }, [isPriceManuallyOverridden, marketPrices, setGlobalParam]);
 
   const kpis = useMemo(
     () =>
@@ -218,6 +222,9 @@ export function OverviewTab({
             error: pricesError,
             isLive: pricesAreLive,
             lastUpdated: pricesLastUpdated,
+            fetchedAt: pricesFetchedAt,
+            isPriceManuallyOverridden,
+            onPriceManualOverride: markPriceManuallyOverridden,
             onRefresh: refreshMarketPrices,
           }}
         />

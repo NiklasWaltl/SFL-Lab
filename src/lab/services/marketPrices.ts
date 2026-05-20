@@ -8,15 +8,17 @@ export interface MarketPricesResponse {
   prices: ResourcePrices;
   isLive: boolean;
   lastUpdated?: string;
+  errorMessage?: string;
 }
 
-function getFallbackMarketPrices(): MarketPricesResponse {
+function getFallbackMarketPrices(errorMessage?: string): MarketPricesResponse {
   const { lastUpdated, ...fallbackPrices } = prices;
 
   return {
     prices: fallbackPrices,
     isLive: false,
     lastUpdated,
+    errorMessage,
   };
 }
 
@@ -71,7 +73,9 @@ export async function fetchMarketPrices(): Promise<MarketPricesResponse> {
     const res = await fetch(MARKET_RATES_URL);
 
     if (!res.ok) {
-      return getFallbackMarketPrices();
+      return getFallbackMarketPrices(
+        "Marktpreise nicht erreichbar – Fallback aktiv",
+      );
     }
 
     const data: unknown = await res.json();
@@ -80,6 +84,8 @@ export async function fetchMarketPrices(): Promise<MarketPricesResponse> {
       isLive: true,
     };
   } catch {
-    return getFallbackMarketPrices();
+    return getFallbackMarketPrices(
+      "Marktpreise nicht erreichbar – Fallback aktiv",
+    );
   }
 }

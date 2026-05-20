@@ -6,6 +6,9 @@ export interface MarketPricesState {
   error: string | null;
   isLive: boolean;
   lastUpdated?: string;
+  fetchedAt?: Date;
+  isPriceManuallyOverridden?: boolean;
+  onPriceManualOverride?: () => void;
   onRefresh: () => void;
 }
 
@@ -84,6 +87,15 @@ export function GlobalParamsPanel({
 }: GlobalParamsPanelProps) {
   const pricesLoading = marketPricesState?.loading ?? false;
   const marketLoaded = marketPricesState !== undefined && !pricesLoading;
+  const isPriceManuallyOverridden =
+    marketPricesState?.isPriceManuallyOverridden ?? false;
+  const fetchedAtLabel = marketPricesState?.fetchedAt?.toLocaleTimeString(
+    "de-AT",
+    {
+      hour: "2-digit",
+      minute: "2-digit",
+    },
+  );
 
   return (
     <section className="rounded-xl border border-[#3e2731]/40 bg-[#181425] p-4 shadow-lg">
@@ -115,8 +127,15 @@ export function GlobalParamsPanel({
               />
             )}
             {marketLoaded && marketPricesState.isLive && (
-              <span className="text-xs text-emerald-400/90">
-                {"✅ Live vom Markt"}
+              <span className="flex flex-col text-xs text-emerald-400/90">
+                <span>{"✅ Live vom Markt"}</span>
+                {fetchedAtLabel && (
+                  <span className="text-gray-400">
+                    {"Zuletzt geladen: "}
+                    {fetchedAtLabel}
+                    {" Uhr"}
+                  </span>
+                )}
               </span>
             )}
             {marketLoaded && !marketPricesState.isLive && (
@@ -135,6 +154,24 @@ export function GlobalParamsPanel({
               {"🔄"}
             </button>
           </div>
+          {marketPricesState.error && (
+            <p className="text-xs text-amber-300" role="alert">
+              {"⚠️ Marktpreise nicht erreichbar – Fallback aktiv"}
+            </p>
+          )}
+          {isPriceManuallyOverridden && (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-amber-200">
+              <span>{"🖊️ Manuell angepasst – Refresh setzt zurück"}</span>
+              <button
+                type="button"
+                onClick={marketPricesState.onRefresh}
+                disabled={pricesLoading}
+                className="rounded border border-amber-400/30 px-2 py-1 text-amber-100 transition-colors hover:border-amber-300/60 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {"Zurücksetzen"}
+              </button>
+            </div>
+          )}
 
           <div className="grid gap-4 sm:grid-cols-2">
             {MARKET_PRICE_FIELDS.map(({ key, label, hint, step }) => (
@@ -144,7 +181,10 @@ export function GlobalParamsPanel({
                 hint={hint}
                 step={step}
                 value={params[key]}
-                onChange={(value) => onChange(key, value)}
+                onChange={(value) => {
+                  marketPricesState.onPriceManualOverride?.();
+                  onChange(key, value);
+                }}
               />
             ))}
           </div>
