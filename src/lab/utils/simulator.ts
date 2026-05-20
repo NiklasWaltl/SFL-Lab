@@ -1,10 +1,11 @@
 import type {
-  Boost,
+  AnyBoost,
   CategoryKey,
   CategoryValue,
   ResourceResult,
   SimulatorImpact,
 } from "../types";
+import { isNftBoost } from "./boosts";
 
 const EMPTY_IMPACT: SimulatorImpact = {
   totalDelta: 0,
@@ -13,10 +14,12 @@ const EMPTY_IMPACT: SimulatorImpact = {
 };
 
 /** Boosts für die Simulator-Auswahl (NFTs zuerst, dann nicht-owned, dann Name) */
-export function getSimulatorBoostOptions(boosts: Boost[]): Boost[] {
+export function getSimulatorBoostOptions<TBoost extends AnyBoost>(
+  boosts: TBoost[],
+): TBoost[] {
   return [...boosts].sort((a, b) => {
-    if (a.source !== b.source) {
-      return a.source === "nft" ? -1 : 1;
+    if (a.type !== b.type) {
+      return a.type === "NFT" ? -1 : 1;
     }
     if (a.owned !== b.owned) {
       return a.owned ? 1 : -1;
@@ -30,40 +33,45 @@ function sumProfit(results: ResourceResult[]): number {
 }
 
 function resolvePrice(
-  boost: Boost | null,
+  boost: AnyBoost | null,
   overridePriceFlw?: number,
 ): number | undefined {
   if (overridePriceFlw !== undefined && overridePriceFlw > 0) {
     return overridePriceFlw;
   }
-  if (boost?.priceFlw !== undefined && boost.priceFlw > 0) {
+  if (boost && isNftBoost(boost) && boost.priceFlw > 0) {
     return boost.priceFlw;
   }
   return undefined;
 }
 
 /** Heuristische Kategorie-Keys, die ein Boost primär beeinflusst */
-export function getBoostAffectedCategoryKeys(boost: Boost): {
+export function getBoostAffectedCategoryKeys(boost: AnyBoost): {
   keys: CategoryKey[];
   estimated: boolean;
 } {
   const keys = new Set<CategoryKey>();
 
-  if (
-    boost.affectsResource === "wood" ||
-    boost.affectsResource === "stone" ||
-    boost.affectsResource === "all"
-  ) {
-    keys.add("resources");
-  }
-
-  if (boost.type === "reduceToolCost") {
-    keys.add("costs");
-  }
-
-  if (boost.type === "reduceRecovery" || boost.type === "addYield") {
-    if (!keys.has("resources")) {
+  for (const effect of boost.effects) {
+    if (
+      effect.resource === "wood" ||
+      effect.resource === "stone" ||
+      effect.resource === "all"
+    ) {
       keys.add("resources");
+    }
+
+    if (effect.effectType === "reduceToolCost") {
+      keys.add("costs");
+    }
+
+    if (
+      effect.effectType === "reduceRecovery" ||
+      effect.effectType === "addYield"
+    ) {
+      if (!keys.has("resources")) {
+        keys.add("resources");
+      }
     }
   }
 
@@ -73,15 +81,19 @@ export function getBoostAffectedCategoryKeys(boost: Boost): {
   }
 
   const estimated =
-    boost.affectsResource !== "wood" &&
-    boost.affectsResource !== "stone" &&
-    boost.affectsResource !== "all";
+    boost.effects.length === 0 ||
+    boost.effects.some(
+      (effect) =>
+        effect.resource !== "wood" &&
+        effect.resource !== "stone" &&
+        effect.resource !== "all",
+    );
 
   return { keys: [...keys], estimated };
 }
 
 function buildHeuristicCategoryDeltas(
-  boost: Boost,
+  boost: AnyBoost,
   totalDelta: number,
   categoryBreakdown: CategoryValue[],
 ): { deltas: Record<string, number>; estimatedKeys: CategoryKey[] } {
@@ -110,22 +122,19 @@ function buildHeuristicCategoryDeltas(
 }
 
 export function calculateSimulatorImpact(
-  selectedBoostId: string | null,
+  selectedBoosts: AnyBoost[],
   enabled: boolean,
-  boosts: Boost[],
   actualResults: ResourceResult[],
   experimentResults: ResourceResult[],
   categoryBreakdown: CategoryValue[],
+  priceBoost?: AnyBoost | null,
   overridePriceFlw?: number,
 ): SimulatorImpact {
-  if (!selectedBoostId || !enabled) {
+  if (selectedBoosts.length === 0 || !enabled) {
     return { ...EMPTY_IMPACT, breakEvenDays: null };
   }
 
-  const boost = boosts.find((b) => b.id === selectedBoostId);
-  if (!boost) {
-    return { ...EMPTY_IMPACT, breakEvenDays: null };
-  }
+  const primaryBoost = selectedBoosts[0];
 
   const totalDelta = sumProfit(experimentResults) - sumProfit(actualResults);
 
@@ -138,13 +147,16 @@ export function calculateSimulatorImpact(
   const hasBreakdownDeltas =
     Object.keys(categoryDeltasFromBreakdown).length > 0;
   const { deltas: heuristicDeltas, estimatedKeys } =
-    buildHeuristicCategoryDeltas(boost, totalDelta, categoryBreakdown);
+    buildHeuristicCategoryDeltas(primaryBoost, totalDelta, categoryBreakdown);
 
   const categoryDeltas = hasBreakdownDeltas
     ? categoryDeltasFromBreakdown
     : heuristicDeltas;
 
-  const price = resolvePrice(boost, overridePriceFlw);
+  const price = resolvePrice(
+    priceBoost ?? selectedBoosts.find(isNftBoost) ?? null,
+    overridePriceFlw,
+  );
 
   let breakEvenDays: number | null = null;
   let roiPercent: number | undefined;
@@ -166,23 +178,29 @@ export function calculateSimulatorImpact(
   };
 }
 
-export function getBoostDescription(boost: Boost): string {
-  const resource =
-    boost.affectsResource === "all" ? "alle Ressourcen" : boost.affectsResource;
-  const pct = `${(boost.value * 100).toFixed(0)} %`;
+export function getBoostDescription(boost: AnyBoost): string {
+  if (boost.effects.length === 0) return "Kein Effekt konfiguriert";
 
-  switch (boost.type) {
-    case "addYield":
-      return `+${boost.value} Ertrag pro Node (${resource})`;
-    case "multiplyYield":
-      return `+${pct} Ertrag (${resource})`;
-    case "reduceToolCost":
-      return `-${pct} Tool-Kosten (${resource})`;
-    case "reduceRecovery":
-      return `-${pct} Regenerationszeit (${resource})`;
-    case "addNodes":
-      return `+${boost.value} Nodes (${resource})`;
-    default:
-      return `Effekt auf ${resource}`;
-  }
+  return boost.effects
+    .map((effect) => {
+      const resource =
+        effect.resource === "all" ? "alle Ressourcen" : effect.resource;
+      const pct = `${(effect.value * 100).toFixed(0)} %`;
+
+      switch (effect.effectType) {
+        case "addYield":
+          return `+${effect.value} Ertrag pro Node (${resource})`;
+        case "multiplyYield":
+          return `+${pct} Ertrag (${resource})`;
+        case "reduceToolCost":
+          return `-${pct} Tool-Kosten (${resource})`;
+        case "reduceRecovery":
+          return `-${pct} Regenerationszeit (${resource})`;
+        case "addNodes":
+          return `+${effect.value} Nodes (${resource})`;
+        default:
+          return `Effekt auf ${resource}`;
+      }
+    })
+    .join(" · ");
 }

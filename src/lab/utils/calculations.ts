@@ -2,12 +2,14 @@
 // Alle Formeln zentral hier – Komponenten nur für Darstellung
 
 import type {
-  ResourceConfig,
+  AnyBoost,
+  FarmState,
   GlobalParams,
-  Boost,
+  ResourceConfig,
   ResourceResult,
   ExperimentDelta,
 } from "../types";
+import { effectTargetsResource, isNftBoost } from "./boosts";
 
 // ---------------------------------------------------------------------------
 // Hilfsfunktionen
@@ -21,16 +23,17 @@ export function cyclesPerDay(recoveryMinutes: number): number {
 /** Berechnet effektiven Yield pro Node nach Boosts */
 export function effectiveYield(
   baseYield: number,
-  boosts: Boost[],
+  boosts: AnyBoost[],
   resourceId: string,
 ): number {
   let additive = 0;
   let multiplier = 0;
-  for (const b of boosts) {
-    if (b.affectsResource !== resourceId && b.affectsResource !== "all")
-      continue;
-    if (b.type === "addYield") additive += b.value;
-    if (b.type === "multiplyYield") multiplier += b.value;
+  for (const boost of boosts) {
+    for (const effect of boost.effects) {
+      if (!effectTargetsResource(effect, resourceId)) continue;
+      if (effect.effectType === "addYield") additive += effect.value;
+      if (effect.effectType === "multiplyYield") multiplier += effect.value;
+    }
   }
   return baseYield * (1 + multiplier) + additive;
 }
@@ -38,14 +41,15 @@ export function effectiveYield(
 /** Berechnet effektive Tool-Kosten in Coins nach Rabatten */
 export function effectiveToolCostCoins(
   baseCost: number,
-  boosts: Boost[],
+  boosts: AnyBoost[],
   resourceId: string,
 ): number {
   let discount = 0;
-  for (const b of boosts) {
-    if (b.affectsResource !== resourceId && b.affectsResource !== "all")
-      continue;
-    if (b.type === "reduceToolCost") discount += b.value;
+  for (const boost of boosts) {
+    for (const effect of boost.effects) {
+      if (!effectTargetsResource(effect, resourceId)) continue;
+      if (effect.effectType === "reduceToolCost") discount += effect.value;
+    }
   }
   return baseCost * (1 - Math.min(discount, 0.99));
 }
@@ -53,16 +57,71 @@ export function effectiveToolCostCoins(
 /** Berechnet effektive Recovery-Zeit in Minuten nach Reduktionen */
 export function effectiveRecovery(
   baseMinutes: number,
-  boosts: Boost[],
+  boosts: AnyBoost[],
   resourceId: string,
 ): number {
   let reduction = 0;
-  for (const b of boosts) {
-    if (b.affectsResource !== resourceId && b.affectsResource !== "all")
-      continue;
-    if (b.type === "reduceRecovery") reduction += b.value;
+  for (const boost of boosts) {
+    for (const effect of boost.effects) {
+      if (!effectTargetsResource(effect, resourceId)) continue;
+      if (effect.effectType === "reduceRecovery") reduction += effect.value;
+    }
   }
   return baseMinutes * (1 - Math.min(reduction, 0.99));
+}
+
+/** Wendet die übergebenen Boosts auf eine Farm-Konfiguration an. */
+export function applyBoosts(
+  baseState: FarmState,
+  boosts: AnyBoost[],
+): FarmState {
+  return {
+    ...baseState,
+    resources: baseState.resources.map((resource) => {
+      let next = { ...resource };
+
+      for (const boost of boosts) {
+        for (const effect of boost.effects) {
+          if (!effectTargetsResource(effect, resource.id)) continue;
+
+          if (effect.effectType === "addYield") {
+            next = {
+              ...next,
+              yieldPerNode: next.yieldPerNode + effect.value,
+            };
+          }
+          if (effect.effectType === "multiplyYield") {
+            next = {
+              ...next,
+              yieldPerNode: next.yieldPerNode * (1 + effect.value),
+            };
+          }
+          if (effect.effectType === "reduceToolCost") {
+            next = {
+              ...next,
+              toolCostCoins:
+                next.toolCostCoins * (1 - Math.min(effect.value, 0.99)),
+            };
+          }
+          if (effect.effectType === "reduceRecovery") {
+            next = {
+              ...next,
+              recoveryMinutes:
+                next.recoveryMinutes * (1 - Math.min(effect.value, 0.99)),
+            };
+          }
+          if (effect.effectType === "addNodes") {
+            next = {
+              ...next,
+              nodeCount: next.nodeCount + effect.value,
+            };
+          }
+        }
+      }
+
+      return next;
+    }),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -72,7 +131,7 @@ export function effectiveRecovery(
 export function calculateResource(
   config: ResourceConfig,
   params: GlobalParams,
-  activeBoosts: Boost[],
+  activeBoosts: AnyBoost[],
 ): ResourceResult {
   const recovery = effectiveRecovery(
     config.recoveryMinutes,
@@ -157,10 +216,10 @@ export function calculateDelta(
 
 /** Ist: nur owned. Experiment: owned + per Toggle aktivierte !owned Boosts */
 export function getActiveBoosts(
-  boosts: Boost[],
+  boosts: AnyBoost[],
   experimentBoostIds: ReadonlySet<string>,
   mode: "actual" | "experiment",
-): Boost[] {
+): AnyBoost[] {
   const owned = boosts.filter((b) => b.owned);
   if (mode === "actual") return owned;
 
@@ -172,29 +231,35 @@ export function getActiveBoosts(
 
 /** Summe der FLW-Preise experimentell aktivierter, nicht-owned Boosts */
 export function sumExperimentBoostPrices(
-  boosts: Boost[],
+  boosts: AnyBoost[],
   experimentBoostIds: ReadonlySet<string>,
 ): number {
   return boosts
-    .filter((b) => !b.owned && experimentBoostIds.has(b.id) && b.priceFlw)
-    .reduce((sum, b) => sum + (b.priceFlw ?? 0), 0);
+    .filter(
+      (boost) =>
+        isNftBoost(boost) &&
+        !boost.owned &&
+        experimentBoostIds.has(boost.id) &&
+        boost.priceFlw > 0,
+    )
+    .reduce((sum, boost) => sum + boost.priceFlw, 0);
 }
 
 /** Marginaler P2P-Gewinn/Tag durch Aktivierung eines einzelnen Boosts */
 export function calculateBoostMarginalProfit(
-  boost: Boost,
+  boost: AnyBoost,
   configs: ResourceConfig[],
   params: GlobalParams,
-  baseActiveBoosts: Boost[],
+  baseActiveBoosts: AnyBoost[],
 ): number {
   const withBoost = [...baseActiveBoosts, boost];
   let marginal = 0;
 
   for (const config of configs) {
-    if (
-      boost.affectsResource !== config.id &&
-      boost.affectsResource !== "all"
-    ) {
+    const affectsConfig = boost.effects.some((effect) =>
+      effectTargetsResource(effect, config.id),
+    );
+    if (!affectsConfig) {
       continue;
     }
     const baseline = calculateResource(config, params, baseActiveBoosts);
@@ -207,12 +272,12 @@ export function calculateBoostMarginalProfit(
 
 /** Break-even in Tagen für einen einzelnen Boost (null wenn nicht berechenbar) */
 export function calculateBoostBreakEvenDays(
-  boost: Boost,
+  boost: AnyBoost,
   configs: ResourceConfig[],
   params: GlobalParams,
-  baseActiveBoosts: Boost[],
+  baseActiveBoosts: AnyBoost[],
 ): number | null {
-  if (!boost.priceFlw) return null;
+  if (!isNftBoost(boost) || !boost.priceFlw) return null;
   const marginal = calculateBoostMarginalProfit(
     boost,
     configs,

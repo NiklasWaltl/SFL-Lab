@@ -1,5 +1,6 @@
-import type { Boost } from "../types";
+import type { NftBoost } from "../types";
 import type { NftAsset, NftSimulationParams } from "../types";
+import { getPrimaryBoostEffect } from "../utils/boosts";
 
 /** Default simulation parameters for the NFT simulator tab */
 export const NFT_DEFAULT_PARAMS: Readonly<NftSimulationParams> = {
@@ -12,15 +13,17 @@ export const NFT_DEFAULT_PARAMS: Readonly<NftSimulationParams> = {
  */
 export const NFT_ASSETS: readonly NftAsset[] = [];
 
-export function boostToNftAsset(boost: Boost): NftAsset {
+export function boostToNftAsset(boost: NftBoost): NftAsset {
+  const effect = getPrimaryBoostEffect(boost);
+
   return {
     key: boost.id,
     label: boost.label,
     basePrice: boost.priceFlw,
-    source: boost.source,
+    type: boost.type,
     owned: boost.owned,
-    affectsResource: boost.affectsResource,
-    boostType: boost.type,
-    effectValue: boost.value,
+    resource: effect.resource,
+    boostType: effect.effectType,
+    effectValue: effect.value,
   };
 }

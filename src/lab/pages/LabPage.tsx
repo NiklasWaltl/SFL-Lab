@@ -6,10 +6,11 @@ import { usePlayerData } from "../hooks/usePlayerData";
 import { useScenarioPersistence } from "../hooks/useScenarioPersistence";
 import { normalizeFarm } from "../utils/normalizePlayer";
 import { CategoriesTab } from "./CategoriesTab";
-import { NftSimulatorTab } from "./NftSimulatorTab";
 import { OverviewTab } from "./OverviewTab";
 import { PortfolioTab } from "./PortfolioTab";
 import { ScenariosTab } from "./ScenariosTab";
+import { SimulatorTab } from "./SimulatorTab";
+import { getSkillPointsSpent, getTotalSkillPoints } from "../utils/boosts";
 
 function ModeToggle({
   mode,
@@ -83,6 +84,15 @@ export function LabPage() {
     () => (playerData ? normalizeFarm(playerData) : null),
     [playerData],
   );
+  const farmSkillState = useMemo(() => {
+    const farmLevel = farm?.level ?? 0;
+
+    return {
+      farmLevel,
+      skillPointsTotal: getTotalSkillPoints(farmLevel),
+      skillPointsSpent: getSkillPointsSpent(lab.skills),
+    };
+  }, [farm, lab.skills]);
 
   const activeTabLabel =
     TABS.find((t) => t.id === activeTab)?.label ?? activeTab;
@@ -138,10 +148,12 @@ export function LabPage() {
               setGlobalParam={lab.setGlobalParam}
               resources={lab.resources}
               boosts={lab.boosts}
+              nfts={lab.nfts}
+              skills={lab.skills}
+              farmSkillState={farmSkillState}
               experimentBoostIds={lab.experimentBoostIds}
               toggleExperimentBoost={lab.toggleExperimentBoost}
               onResetExperiment={lab.resetExperiment}
-              actualActiveBoosts={lab.actualActiveBoosts}
               experimentActiveBoosts={lab.experimentActiveBoosts}
             />
           )}
@@ -164,19 +176,15 @@ export function LabPage() {
             />
           )}
 
-          {activeTab === "nft-simulator" && (
-            <NftSimulatorTab
-              farm={farm}
-              boosts={lab.boosts}
-              actualResults={lab.actualResults}
-              experimentResults={lab.experimentResults}
-              deltas={lab.deltas}
-              loading={loading}
-              isMock={isMock}
-              error={error}
-              globalParams={lab.globalParams}
-              resources={lab.resources}
-              actualActiveBoosts={lab.actualActiveBoosts}
+          {activeTab === "simulator" && (
+            <SimulatorTab
+              nfts={lab.nfts}
+              skills={lab.skills}
+              farmSkillState={farmSkillState}
+              baseState={{
+                resources: lab.resources,
+                globalParams: lab.globalParams,
+              }}
             />
           )}
 
@@ -190,6 +198,7 @@ export function LabPage() {
               loading={loading}
               isMock={isMock}
               error={error}
+              farmSkillState={farmSkillState}
               scenarioPersistence={scenarioPersistence}
             />
           )}
@@ -200,7 +209,7 @@ export function LabPage() {
 
           {activeTab !== "overview" &&
             activeTab !== "categories" &&
-            activeTab !== "nft-simulator" &&
+            activeTab !== "simulator" &&
             activeTab !== "portfolio" &&
             activeTab !== "scenarios" && (
               <TabPlaceholder label={activeTabLabel} />

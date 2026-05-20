@@ -143,12 +143,12 @@ function BoostDetails({
               <span className="text-sm text-[#ead4aa]">{line.boost.label}</span>
               <span
                 className={`rounded px-1.5 py-0.5 text-xs uppercase ${
-                  line.boost.source === "nft"
+                  line.boost.type === "NFT"
                     ? "bg-purple-500/20 text-purple-300"
                     : "bg-blue-500/20 text-blue-300"
                 }`}
               >
-                {line.boost.source}
+                {line.boost.type}
               </span>
               {isExperimentView && line.isExperimentOnly && (
                 <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-xs text-amber-300">

@@ -25,26 +25,53 @@ export interface ResourceConfig {
 }
 
 // ---------------------------------------------------------------------------
-// Boost / Modifikator (NFT oder Skill)
+// Boost-Effekte und Domänen-Modelle
 // ---------------------------------------------------------------------------
-export type BoostType =
+export type BoostEffectType =
   | "addYield" // +X Yield pro Node (absolut)
   | "multiplyYield" // +X% Yield pro Node (relativ)
   | "reduceToolCost" // -X% Tool-Kosten
   | "reduceRecovery" // -X% Recovery-Zeit
   | "addNodes"; // +X zusätzliche Nodes
 
-export type BoostSource = "nft" | "skill";
+export type BoostType = BoostEffectType;
 
-export interface Boost {
+export interface BoostEffect {
+  resource: string; // "wood", "stone", "all", ...
+  effectType: BoostEffectType;
+  value: number; // absoluter Wert oder Prozentsatz (0.1 = 10%)
+}
+
+interface BaseBoost {
   id: string;
   label: string;
-  source: BoostSource;
-  affectsResource: string; // "wood", "stone", "all", ...
-  type: BoostType;
-  value: number; // absoluter Wert oder Prozentsatz (0.1 = 10%)
-  priceFlw?: number; // Kaufpreis in FLW (nur bei NFTs)
+  type: "NFT" | "SKILL";
   owned: boolean; // true = Ist-Zustand, false = Experiment
+  effects: BoostEffect[];
+}
+
+export interface NftBoost extends BaseBoost {
+  type: "NFT";
+  priceFlw: number; // Kaufpreis in FLW
+}
+
+export interface SkillBoost extends BaseBoost {
+  type: "SKILL";
+  skillPointCost: 1 | 2 | 3;
+}
+
+export interface FarmSkillState {
+  farmLevel: number;
+  skillPointsTotal: number;
+  skillPointsSpent: number;
+}
+
+export type AnyBoost = NftBoost | SkillBoost;
+export type Boost = AnyBoost;
+
+export interface FarmState {
+  resources: ResourceConfig[];
+  globalParams: GlobalParams;
 }
 
 // ---------------------------------------------------------------------------

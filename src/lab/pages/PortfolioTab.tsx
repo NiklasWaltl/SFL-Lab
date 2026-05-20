@@ -4,6 +4,7 @@ import React, { useCallback, useMemo, useState } from "react";
 import type { useScenarioPersistence } from "../hooks/useScenarioPersistence";
 import type {
   Boost,
+  FarmSkillState,
   GlobalParams,
   PortfolioPosition,
   ResourceConfig,
@@ -22,6 +23,7 @@ interface PortfolioTabProps {
   loading: boolean;
   isMock: boolean;
   error: string | null;
+  farmSkillState: FarmSkillState;
   scenarioPersistence: ReturnType<typeof useScenarioPersistence>;
 }
 
@@ -86,13 +88,68 @@ function PositionCard({
   onSetCurrentValue,
   purchaseDateInput,
   currentValueInput,
+  farmSkillState,
 }: {
   pos: PortfolioPosition;
   onSetDate: (id: string, val: string) => void;
   onSetCurrentValue: (id: string, val: string) => void;
   purchaseDateInput: string;
   currentValueInput: string;
+  farmSkillState: FarmSkillState;
 }) {
+  if (pos.type === "SKILL") {
+    const skillPointsAvailable = Math.max(
+      0,
+      farmSkillState.skillPointsTotal - farmSkillState.skillPointsSpent,
+    );
+    const skillPointCost = pos.skillPointCost ?? 0;
+
+    return (
+      <div
+        className={`rounded-xl border p-4 transition-colors ${
+          pos.owned
+            ? "border-[#3e2731]/70 bg-[#181425]"
+            : "border-amber-700/30 bg-[#12101f]"
+        }`}
+      >
+        <div className="mb-3 flex items-start justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-[#ead4aa]">{pos.label}</span>
+              <span className="rounded bg-blue-900/40 px-1.5 py-0.5 text-[10px] font-medium text-blue-300">
+                {"Skill"}
+              </span>
+            </div>
+            <p className="mt-0.5 text-xs text-gray-500">
+              {"Ressource: "}
+              {pos.resource}
+            </p>
+          </div>
+        </div>
+
+        <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <Metric label="Skill-Punkte-Kosten" value={`${skillPointCost} SP`} />
+          <Metric
+            label="Verfügbare SP"
+            value={`${skillPointsAvailable} / ${farmSkillState.skillPointsTotal}`}
+          />
+          <Metric
+            label="+Wert / Tag"
+            value={flw(pos.dailyValueFlw, 4)}
+            highlight={pos.dailyValueFlw > 0}
+          />
+        </div>
+
+        <p className="rounded-lg bg-[#0f0d1a]/80 px-3 py-2 text-xs text-gray-400">
+          {"Status: "}
+          <span className={pos.owned ? "text-green-300" : "text-amber-300"}>
+            {pos.owned ? "Owned" : "Nicht investiert"}
+          </span>
+        </p>
+      </div>
+    );
+  }
+
   const worthIt = pos.breakEvenDays !== null && pos.breakEvenDays <= 365;
 
   return (
@@ -108,14 +165,9 @@ function PositionCard({
         <div>
           <div className="flex items-center gap-2">
             <span className="font-semibold text-[#ead4aa]">{pos.label}</span>
-            {pos.source === "nft" && (
+            {pos.type === "NFT" && (
               <span className="rounded bg-amber-700/40 px-1.5 py-0.5 text-[10px] font-medium text-amber-300">
                 {"NFT"}
-              </span>
-            )}
-            {pos.source === "skill" && (
-              <span className="rounded bg-blue-900/40 px-1.5 py-0.5 text-[10px] font-medium text-blue-300">
-                {"Skill"}
               </span>
             )}
             {!pos.owned && (
@@ -126,7 +178,7 @@ function PositionCard({
           </div>
           <p className="text-xs text-gray-500 mt-0.5">
             {"Ressource: "}
-            {pos.affectsResource}
+            {pos.resource}
           </p>
         </div>
         {pos.breakEvenDays !== null && (
@@ -252,6 +304,7 @@ export function PortfolioTab({
   loading,
   isMock,
   error,
+  farmSkillState,
   scenarioPersistence,
 }: PortfolioTabProps) {
   const { scenarios, activeScenarioId, saveScenario } = scenarioPersistence;
@@ -321,9 +374,8 @@ export function PortfolioTab({
 
   const filtered = useMemo(() => {
     if (filter === "owned") return positions.filter((p) => p.owned);
-    if (filter === "nft") return positions.filter((p) => p.source === "nft");
-    if (filter === "skill")
-      return positions.filter((p) => p.source === "skill");
+    if (filter === "nft") return positions.filter((p) => p.type === "NFT");
+    if (filter === "skill") return positions.filter((p) => p.type === "SKILL");
     return positions;
   }, [positions, filter]);
 
@@ -423,6 +475,7 @@ export function PortfolioTab({
               onSetCurrentValue={handleSetCurrentValue}
               purchaseDateInput={purchaseDates[pos.id] ?? ""}
               currentValueInput={currentValues[pos.id] ?? ""}
+              farmSkillState={farmSkillState}
             />
           ))}
         </div>
@@ -430,7 +483,7 @@ export function PortfolioTab({
 
       <p className="text-[11px] text-gray-600">
         {
-          "* Täglicher Mehrwert = marginaler P2P-Profit durch diesen Boost allein. Break-even basiert auf Kaufpreis ÷ täglichem Mehrwert."
+          "* Täglicher Mehrwert = marginaler P2P-Profit durch diesen Boost allein. Break-even wird nur für NFTs mit Kaufpreis berechnet."
         }
       </p>
     </div>

@@ -1,18 +1,35 @@
-import React from "react";
-import type { Boost, GlobalParams, ResourceConfig } from "../types";
+import React, { useState } from "react";
+import type {
+  AnyBoost,
+  FarmSkillState,
+  GlobalParams,
+  NftBoost,
+  ResourceConfig,
+  SkillBoost,
+} from "../types";
 import {
   calculateBoostBreakEvenDays,
   calculateBoostMarginalProfit,
 } from "../utils/calculations";
+import {
+  canActivateSkill,
+  getPrimaryBoostEffect,
+  getSkillPointsSpent,
+  isNftBoost,
+  isSkillBoost,
+} from "../utils/boosts";
 import { formatBreakEven, formatNumber } from "../utils/format";
 
+type BoostTab = "nfts" | "skills";
+
 interface BoostPanelProps {
-  boosts: Boost[];
+  nfts: NftBoost[];
+  skills: SkillBoost[];
   experimentBoostIds: ReadonlySet<string>;
   resources: ResourceConfig[];
   globalParams: GlobalParams;
-  actualActiveBoosts: Boost[];
-  experimentActiveBoosts: Boost[];
+  farmSkillState: FarmSkillState;
+  experimentActiveBoosts: AnyBoost[];
   onToggleExperiment: (id: string) => void;
 }
 
@@ -20,7 +37,7 @@ function BoostChip({
   boost,
   variant,
 }: {
-  boost: Boost;
+  boost: AnyBoost;
   variant: "owned" | "experiment-active" | "experiment-inactive";
 }) {
   const variantClass =
@@ -37,12 +54,12 @@ function BoostChip({
       <span className="text-[#ead4aa]">{boost.label}</span>
       <span
         className={`rounded px-1.5 py-0.5 text-xs uppercase ${
-          boost.source === "nft"
+          boost.type === "NFT"
             ? "bg-purple-500/20 text-purple-300"
             : "bg-blue-500/20 text-blue-300"
         }`}
       >
-        {boost.source}
+        {boost.type}
       </span>
     </span>
   );
@@ -54,13 +71,15 @@ function ExperimentBoostRow({
   resources,
   globalParams,
   experimentActiveBoosts,
+  disabledReason,
   onToggle,
 }: {
-  boost: Boost;
+  boost: AnyBoost;
   isActive: boolean;
   resources: ResourceConfig[];
   globalParams: GlobalParams;
-  experimentActiveBoosts: Boost[];
+  experimentActiveBoosts: AnyBoost[];
+  disabledReason?: string;
   onToggle: () => void;
 }) {
   const baseForMarginal = experimentActiveBoosts.filter(
@@ -75,7 +94,7 @@ function ExperimentBoostRow({
       )
     : null;
   const breakEven =
-    isActive && boost.priceFlw
+    isActive && isNftBoost(boost) && boost.priceFlw
       ? calculateBoostBreakEvenDays(
           boost,
           resources,
@@ -94,7 +113,7 @@ function ExperimentBoostRow({
     >
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-medium text-[#ead4aa]">{boost.label}</span>
-        <span className="text-xs uppercase text-gray-500">{boost.source}</span>
+        <span className="text-xs uppercase text-gray-500">{boost.type}</span>
         {!boost.owned && (
           <span className="text-xs text-amber-400/80">{"Nicht owned"}</span>
         )}
@@ -104,11 +123,19 @@ function ExperimentBoostRow({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        {boost.priceFlw !== undefined && boost.priceFlw > 0 && (
+        {isNftBoost(boost) && (
           <span className="text-sm text-gray-400">
             {"Preis: "}
             {formatNumber(boost.priceFlw)}
             {" FLW"}
+          </span>
+        )}
+        {isSkillBoost(boost) && (
+          <span className="text-sm text-gray-400">
+            {"Kosten: "}
+            {boost.skillPointCost}
+            {" Skill-Punkt"}
+            {boost.skillPointCost > 1 ? "e" : ""}
           </span>
         )}
         {isActive && marginal !== null && marginal > 0 && (
@@ -128,24 +155,31 @@ function ExperimentBoostRow({
           <button
             type="button"
             onClick={onToggle}
+            disabled={disabledReason !== undefined}
+            title={disabledReason}
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-              isActive
-                ? "bg-amber-600/80 text-white hover:bg-amber-600"
-                : "bg-[#3e2731]/60 text-[#ead4aa] hover:bg-[#3e2731]"
+              disabledReason !== undefined
+                ? "cursor-not-allowed bg-gray-700/50 text-gray-500"
+                : isActive
+                  ? "bg-amber-600/80 text-white hover:bg-amber-600"
+                  : "bg-[#3e2731]/60 text-[#ead4aa] hover:bg-[#3e2731]"
             }`}
           >
             {isActive ? "Deaktivieren" : "Aktivieren"}
           </button>
+        )}
+        {disabledReason && (
+          <span className="text-xs text-red-300">{disabledReason}</span>
         )}
       </div>
     </div>
   );
 }
 
-function groupByResource(boosts: Boost[]): Map<string, Boost[]> {
-  const map = new Map<string, Boost[]>();
+function groupByResource(boosts: AnyBoost[]): Map<string, AnyBoost[]> {
+  const map = new Map<string, AnyBoost[]>();
   for (const b of boosts) {
-    const key = b.affectsResource;
+    const key = getPrimaryBoostEffect(b).resource;
     const list = map.get(key) ?? [];
     list.push(b);
     map.set(key, list);
@@ -154,16 +188,30 @@ function groupByResource(boosts: Boost[]): Map<string, Boost[]> {
 }
 
 export function BoostPanel({
-  boosts,
+  nfts,
+  skills,
   experimentBoostIds,
   resources,
   globalParams,
+  farmSkillState,
   experimentActiveBoosts,
   onToggleExperiment,
 }: BoostPanelProps) {
-  const ownedBoosts = boosts.filter((b) => b.owned);
+  const [activeTab, setActiveTab] = useState<BoostTab>("nfts");
+  const boosts = activeTab === "nfts" ? nfts : skills;
+  const ownedBoosts = [...nfts, ...skills].filter((b) => b.owned);
   const grouped = groupByResource(boosts);
-  const allOwned = boosts.every((b) => b.owned);
+  const allOwned = boosts.length > 0 && boosts.every((b) => b.owned);
+  const activeSkills = skills
+    .filter((skill) => skill.owned || experimentBoostIds.has(skill.id))
+    .map((skill) => ({ ...skill, owned: true }));
+  const activeFarmSkillState: FarmSkillState = {
+    ...farmSkillState,
+    skillPointsSpent: getSkillPointsSpent(activeSkills),
+  };
+  const skillPointsAvailable =
+    activeFarmSkillState.skillPointsTotal -
+    activeFarmSkillState.skillPointsSpent;
 
   return (
     <section className="flex flex-col gap-6">
@@ -186,14 +234,52 @@ export function BoostPanel({
       </article>
 
       <article className="rounded-xl border border-[#3e2731]/40 bg-[#181425] p-4 shadow-lg">
-        <h2 className="mb-3 text-lg font-semibold text-[#ead4aa]">
-          {"Experiment"}
-        </h2>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-[#ead4aa]">
+            {"Experiment"}
+          </h2>
+          <div
+            className="inline-flex rounded-lg border border-[#3e2731]/60 bg-[#0f0d1a] p-1"
+            role="group"
+            aria-label="Boost-Typ"
+          >
+            {(["nfts", "skills"] as const).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                  activeTab === tab
+                    ? "bg-[#3e2731] text-[#ead4aa]"
+                    : "text-gray-400 hover:text-[#ead4aa]"
+                }`}
+              >
+                {tab === "nfts" ? "NFTs" : "Skills"}
+              </button>
+            ))}
+          </div>
+        </div>
         <p className="mb-4 text-xs text-gray-400">
           {
             "Zusätzliche Boosts simulieren (auch ohne Besitz). Owned Boosts sind immer aktiv."
           }
         </p>
+        {activeTab === "nfts" && (
+          <p className="mb-4 text-xs text-gray-500">
+            {"NFTs zeigen den Kaufpreis in FLW."}
+          </p>
+        )}
+        {activeTab === "skills" && (
+          <p className="mb-4 text-xs text-gray-500">
+            {"Farm-Level "}
+            {activeFarmSkillState.farmLevel}
+            {" · Skill-Punkte: "}
+            {skillPointsAvailable}
+            {" verfügbar / "}
+            {activeFarmSkillState.skillPointsTotal}
+            {" gesamt"}
+          </p>
+        )}
 
         {boosts.length === 0 ? (
           <p className="text-sm text-gray-500">
@@ -210,6 +296,12 @@ export function BoostPanel({
                   {list.map((boost) => {
                     const isActive =
                       boost.owned || experimentBoostIds.has(boost.id);
+                    const disabledReason =
+                      isSkillBoost(boost) &&
+                      !isActive &&
+                      !canActivateSkill(boost, activeFarmSkillState)
+                        ? "Nicht genug Skill-Punkte"
+                        : undefined;
 
                     if (boost.owned) {
                       return (
@@ -229,6 +321,7 @@ export function BoostPanel({
                         resources={resources}
                         globalParams={globalParams}
                         experimentActiveBoosts={experimentActiveBoosts}
+                        disabledReason={disabledReason}
                         onToggle={() => onToggleExperiment(boost.id)}
                       />
                     );

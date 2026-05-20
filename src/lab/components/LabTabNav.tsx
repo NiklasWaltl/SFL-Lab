@@ -3,14 +3,14 @@ import React from "react";
 export type TabId =
   | "overview"
   | "categories"
-  | "nft-simulator"
+  | "simulator"
   | "portfolio"
   | "scenarios";
 
 export const TABS: { id: TabId; label: string }[] = [
   { id: "overview", label: "Übersicht" },
   { id: "categories", label: "Kategorien" },
-  { id: "nft-simulator", label: "NFT-Simulator" },
+  { id: "simulator", label: "Simulator" },
   { id: "portfolio", label: "Portfolio" },
   { id: "scenarios", label: "Szenarien" },
 ];

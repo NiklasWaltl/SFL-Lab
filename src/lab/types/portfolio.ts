@@ -4,8 +4,10 @@
 export interface PortfolioPosition {
   id: string;
   label: string;
-  source: "nft" | "skill";
-  affectsResource: string;
+  type: "NFT" | "SKILL";
+  resource: string;
+  /** Skill-Punkte-Kosten (nur bei Skills) */
+  skillPointCost?: 1 | 2 | 3;
   /** Kaufpreis in FLW (manuell eingetragen oder aus boost.priceFlw) */
   purchasePriceFlw: number | null;
   /** Aktueller Marktwert in FLW (editierbar) */

@@ -8,10 +8,13 @@ import { KpiRow } from "../components/overview/KpiRow";
 import type {
   Boost,
   ExperimentDelta,
+  FarmSkillState,
   GlobalParams,
   NormalizedFarm,
+  NftBoost,
   ResourceConfig,
   ResourceResult,
+  SkillBoost,
 } from "../types";
 import type { LabMode } from "../hooks/useLabState";
 import { useMarketPrices } from "../hooks/useMarketPrices";
@@ -33,10 +36,12 @@ export interface OverviewTabProps {
   ) => void;
   resources: ResourceConfig[];
   boosts: Boost[];
+  nfts: NftBoost[];
+  skills: SkillBoost[];
+  farmSkillState: FarmSkillState;
   experimentBoostIds: ReadonlySet<string>;
   toggleExperimentBoost: (id: string) => void;
   onResetExperiment: () => void;
-  actualActiveBoosts: Boost[];
   experimentActiveBoosts: Boost[];
 }
 
@@ -53,10 +58,12 @@ export function OverviewTab({
   setGlobalParam,
   resources,
   boosts,
+  nfts,
+  skills,
+  farmSkillState,
   experimentBoostIds,
   toggleExperimentBoost,
   onResetExperiment,
-  actualActiveBoosts,
   experimentActiveBoosts,
 }: OverviewTabProps) {
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
@@ -230,11 +237,12 @@ export function OverviewTab({
         />
         {isExperimentView && (
           <BoostPanel
-            boosts={boosts}
+            nfts={nfts}
+            skills={skills}
             experimentBoostIds={experimentBoostIds}
             resources={resources}
             globalParams={globalParams}
-            actualActiveBoosts={actualActiveBoosts}
+            farmSkillState={farmSkillState}
             experimentActiveBoosts={experimentActiveBoosts}
             onToggleExperiment={toggleExperimentBoost}
           />

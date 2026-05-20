@@ -8,6 +8,7 @@ import type {
   ResourceResult,
 } from "../types";
 import { calculateResource, getActiveBoosts } from "../utils/calculations";
+import { isNftBoost, isSkillBoost } from "../utils/boosts";
 import { useExperiment } from "./useExperiment";
 
 export type LabMode = "actual" | "experiment";
@@ -19,7 +20,10 @@ const DEFAULT_GLOBAL_PARAMS: GlobalParams = {
 };
 
 function cloneBoosts(boosts: Boost[]): Boost[] {
-  return boosts.map((b) => ({ ...b }));
+  return boosts.map((b) => ({
+    ...b,
+    effects: b.effects.map((effect) => ({ ...effect })),
+  }));
 }
 
 function cloneResources(resources: ResourceConfig[]): ResourceConfig[] {
@@ -34,6 +38,8 @@ export function useLabState() {
     cloneResources(RESOURCE_DEFAULTS),
   );
   const [boosts, setBoosts] = useState<Boost[]>(() => cloneBoosts(BOOSTS));
+  const nfts = useMemo(() => boosts.filter(isNftBoost), [boosts]);
+  const skills = useMemo(() => boosts.filter(isSkillBoost), [boosts]);
 
   const setGlobalParam = useCallback(
     <K extends keyof GlobalParams>(key: K, value: GlobalParams[K]) => {
@@ -87,6 +93,8 @@ export function useLabState() {
     globalParams,
     resources,
     boosts,
+    nfts,
+    skills,
     setGlobalParam,
     setResourceField,
     setBoostOwned,

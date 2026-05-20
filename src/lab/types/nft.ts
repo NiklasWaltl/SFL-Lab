@@ -1,4 +1,4 @@
-import type { BoostSource, BoostType } from "./index";
+import type { BoostEffectType } from "./index";
 import type { ResourceResult } from "./index";
 import type { CategoryKey } from "./categories";
 import type { SimulatorImpact } from "./simulator";
@@ -8,10 +8,10 @@ export interface NftAsset {
   key: string;
   label: string;
   basePrice?: number;
-  source: BoostSource;
+  type: "NFT";
   owned: boolean;
-  affectsResource: string;
-  boostType: BoostType;
+  resource: string;
+  boostType: BoostEffectType;
   effectValue: number;
 }
 

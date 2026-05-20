@@ -1,5 +1,12 @@
 import React, { useMemo } from "react";
-import type { Boost, CategoryValue, SimulatorImpact } from "../../types";
+import type {
+  AnyBoost,
+  CategoryValue,
+  FarmSkillState,
+  NftBoost,
+  SimulatorImpact,
+  SkillBoost,
+} from "../../types";
 import { CATEGORY_BY_KEY } from "../../config/categories.config";
 import {
   deltaColorClass,
@@ -7,51 +14,101 @@ import {
   formatDelta,
   formatNumber,
 } from "../../utils/format";
+import { getPrimaryBoostEffect } from "../../utils/boosts";
 import { getBoostAffectedCategoryKeys } from "../../utils/simulator";
 
 export interface SimulatorResultProps {
   impact: SimulatorImpact;
-  selectedBoost: Boost | null;
+  nftImpact: SimulatorImpact;
+  skillImpact: SimulatorImpact;
+  selectedNft: NftBoost | null;
+  selectedSkill: SkillBoost | null;
+  farmSkillState: FarmSkillState;
+  effectiveFarmLevel: number;
   categoryBreakdown: CategoryValue[];
   enabled: boolean;
 }
 
 function getInsightMessage(
   impact: SimulatorImpact,
-  selectedBoost: Boost | null,
+  selectedBoosts: AnyBoost[],
   enabled: boolean,
 ): string | null {
-  if (!selectedBoost || !enabled) return null;
+  if (selectedBoosts.length === 0 || !enabled) return null;
 
-  if (selectedBoost.owned) {
+  if (selectedBoosts.every((boost) => boost.owned)) {
     return "Dieser Boost ist bereits auf deiner Farm aktiv – kein zusätzlicher Effekt.";
   }
 
   if (impact.totalDelta <= 0.01) {
-    return "Dieses NFT lohnt sich für deine aktuelle Farm kaum.";
+    return "Diese Auswahl lohnt sich für deine aktuelle Farm kaum.";
   }
 
-  const { keys } = getBoostAffectedCategoryKeys(selectedBoost);
+  const keys = [
+    ...new Set(
+      selectedBoosts.flatMap(
+        (boost) => getBoostAffectedCategoryKeys(boost).keys,
+      ),
+    ),
+  ];
   const labels = keys
     .map((k) => CATEGORY_BY_KEY[k]?.label ?? k)
     .filter((l) => l !== "Netto");
 
   if (labels.length > 0) {
-    return `Dieses NFT bringt vor allem bei ${labels.join(" / ")} etwas.`;
+    return `Diese Auswahl bringt vor allem bei ${labels.join(" / ")} etwas.`;
   }
 
   return "Positiver Effekt auf deinen Farm-Gewinn erwartet.";
 }
 
+function formatResourceLabel(resource: string): string {
+  return resource === "all" ? "alle Ressourcen" : resource;
+}
+
 export function SimulatorResult({
   impact,
-  selectedBoost,
+  nftImpact,
+  skillImpact,
+  selectedNft,
+  selectedSkill,
+  farmSkillState,
+  effectiveFarmLevel,
   categoryBreakdown,
   enabled,
 }: SimulatorResultProps) {
+  const selectedBoosts = useMemo(
+    () => [selectedNft, selectedSkill].filter((b): b is AnyBoost => b !== null),
+    [selectedNft, selectedSkill],
+  );
+  const hasNft = selectedNft !== null;
+  const hasSkill = selectedSkill !== null;
+  const hasSelection = selectedBoosts.length > 0;
+  const skillContribution =
+    hasNft && hasSkill
+      ? impact.totalDelta - nftImpact.totalDelta
+      : skillImpact.totalDelta;
+  const nftResource = selectedNft
+    ? getPrimaryBoostEffect(selectedNft).resource
+    : null;
+  const skillResource = selectedSkill
+    ? getPrimaryBoostEffect(selectedSkill).resource
+    : null;
+  const hasResourceSplit =
+    hasNft && hasSkill && nftResource !== null && skillResource !== null
+      ? nftResource !== skillResource
+      : false;
+  const requiredFarmLevel = selectedSkill
+    ? Math.max(
+        farmSkillState.farmLevel,
+        farmSkillState.skillPointsSpent + selectedSkill.skillPointCost,
+      )
+    : null;
+  const simulatedLevelDelta = effectiveFarmLevel - farmSkillState.farmLevel;
+
   const insight = useMemo(
-    () => getInsightMessage(impact, selectedBoost, enabled),
-    [impact, selectedBoost, enabled],
+    () => getInsightMessage(impact, selectedBoosts, enabled),
+    [impact, selectedBoosts, enabled],
   );
 
   const affectedCategories = useMemo(() => {
@@ -76,9 +133,15 @@ export function SimulatorResult({
       });
     }
 
-    if (!selectedBoost || !enabled) return [];
+    if (!hasSelection || !enabled) return [];
 
-    const { keys } = getBoostAffectedCategoryKeys(selectedBoost);
+    const keys = [
+      ...new Set(
+        selectedBoosts.flatMap(
+          (boost) => getBoostAffectedCategoryKeys(boost).keys,
+        ),
+      ),
+    ];
     return keys
       .filter((k) => k !== "net")
       .map((key) => ({
@@ -88,13 +151,13 @@ export function SimulatorResult({
         estimated: true,
         status: categoryBreakdown.find((c) => c.key === key)?.status,
       }));
-  }, [impact, categoryBreakdown, selectedBoost, enabled]);
+  }, [impact, categoryBreakdown, selectedBoosts, hasSelection, enabled]);
 
   const showEconomics =
     enabled &&
-    selectedBoost &&
-    impact.totalDelta > 0 &&
-    (impact.breakEvenDays !== null || impact.roiPercent !== undefined);
+    selectedNft &&
+    nftImpact.totalDelta > 0 &&
+    (nftImpact.breakEvenDays !== null || nftImpact.roiPercent !== undefined);
 
   return (
     <section className="flex flex-col gap-4 rounded-xl border border-[#3e2731]/40 bg-[#181425] p-4 shadow-lg">
@@ -105,13 +168,13 @@ export function SimulatorResult({
         </p>
       </div>
 
-      {!selectedBoost && (
+      {!hasSelection && (
         <p className="rounded-lg border border-dashed border-[#3e2731]/50 bg-[#0f0d1a] px-4 py-8 text-center text-sm text-gray-500">
-          {"Wähle links einen Boost, um die Auswirkung zu sehen."}
+          {"Wähle links einen Boost"}
         </p>
       )}
 
-      {selectedBoost && (
+      {hasSelection && (
         <>
           <div className="rounded-xl border border-[#3e2731]/50 bg-[#0f0d1a] p-4 text-center">
             <p className="text-xs uppercase tracking-wide text-gray-500">
@@ -125,18 +188,58 @@ export function SimulatorResult({
               {enabled ? formatDelta(impact.totalDelta) : formatDelta(0)}
             </p>
             <p className="mt-1 text-sm text-gray-500">{"FLW/Tag"}</p>
-            {selectedBoost && (
-              <p className="mt-2 text-xs text-gray-400">
-                {selectedBoost.label}
-                {!enabled && " · Simulation aus"}
-              </p>
+            <p className="mt-2 text-xs text-gray-400">
+              {selectedBoosts.map((boost) => boost.label).join(" + ")}
+              {!enabled && " · Simulation aus"}
+            </p>
+            {hasNft && hasSkill && enabled && (
+              <div className="mt-3 flex flex-col gap-1 text-xs text-gray-400">
+                {hasResourceSplit ? (
+                  <>
+                    <p>
+                      {formatResourceLabel(nftResource ?? "")}
+                      {" (NFT): "}
+                      <span className={deltaColorClass(nftImpact.totalDelta)}>
+                        {formatDelta(nftImpact.totalDelta)}
+                      </span>
+                      {" FLW"}
+                    </p>
+                    <p>
+                      {formatResourceLabel(skillResource ?? "")}
+                      {" (Skill): "}
+                      <span className={deltaColorClass(skillImpact.totalDelta)}>
+                        {formatDelta(skillImpact.totalDelta)}
+                      </span>
+                      {" FLW"}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p>
+                      {"davon NFT: "}
+                      <span className={deltaColorClass(nftImpact.totalDelta)}>
+                        {formatDelta(nftImpact.totalDelta)}
+                      </span>
+                      {" FLW"}
+                    </p>
+                    <p>
+                      {"davon Skill: "}
+                      <span className={deltaColorClass(skillContribution)}>
+                        {formatDelta(skillContribution)}
+                      </span>
+                      {" FLW"}
+                    </p>
+                  </>
+                )}
+              </div>
             )}
           </div>
 
           {insight && (
             <p
               className={`rounded-lg px-3 py-2 text-sm ${
-                impact.totalDelta > 0.01 && !selectedBoost.owned
+                impact.totalDelta > 0.01 &&
+                selectedBoosts.some((boost) => !boost.owned)
                   ? "border border-green-500/30 bg-green-500/10 text-green-200"
                   : "border border-[#3e2731]/50 bg-[#0f0d1a] text-gray-300"
               }`}
@@ -146,32 +249,55 @@ export function SimulatorResult({
             </p>
           )}
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <MetricCard
-              label="Break-even"
-              value={
-                !enabled || !selectedBoost
-                  ? "—"
-                  : formatBreakEven(impact.breakEvenDays ?? null)
-              }
-              highlight
-            />
-            <MetricCard
-              label="ROI (annualisiert)"
-              value={
-                !enabled || !selectedBoost
-                  ? "—"
-                  : impact.roiPercent !== undefined
-                    ? `${formatNumber(impact.roiPercent)} %`
-                    : "Nicht berechenbar"
-              }
-            />
-          </div>
+          {hasNft && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <MetricCard
+                label="Break-even"
+                value={
+                  !enabled || !selectedNft
+                    ? "—"
+                    : formatBreakEven(nftImpact.breakEvenDays ?? null)
+                }
+                highlight
+              />
+              <MetricCard
+                label="ROI (annualisiert)"
+                value={
+                  !enabled || !selectedNft
+                    ? "—"
+                    : nftImpact.roiPercent !== undefined
+                      ? `${formatNumber(nftImpact.roiPercent)} %`
+                      : "Nicht berechenbar"
+                }
+              />
+            </div>
+          )}
+
+          {hasSkill && (
+            <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-3">
+              <p className="text-xs uppercase tracking-wide text-blue-300">
+                {"SP-Kosten"}
+              </p>
+              <p className="mt-1 text-lg font-semibold text-[#ead4aa]">
+                {selectedSkill.skillPointCost}
+                {" SP"}
+              </p>
+              {simulatedLevelDelta > 0 && requiredFarmLevel !== null && (
+                <p className="mt-2 text-xs text-amber-200">
+                  {"Benötigt Farm Level "}
+                  {requiredFarmLevel}
+                  {" (+"}
+                  {requiredFarmLevel - farmSkillState.farmLevel}
+                  {" Level zum Ist-Zustand)."}
+                </p>
+              )}
+            </div>
+          )}
 
           {showEconomics && (
             <p className="text-xs text-gray-500">
               {
-                "Break-even und ROI basieren auf Kaufpreis bzw. überschriebenem Preis und dem täglichen Mehrgewinn."
+                "Break-even und ROI basieren nur auf dem NFT-Anteil, Kaufpreis bzw. überschriebenem Preis und dem täglichen Mehrgewinn."
               }
             </p>
           )}
@@ -223,7 +349,7 @@ export function SimulatorResult({
             <p className="font-medium text-gray-400">{"Ist vs. Simulation"}</p>
             <p className="mt-1">
               {
-                "Ist: deine Farm mit allen owned Boosts. Simulation: zusätzlich der gewählte Boost (einzeln)."
+                "Ist: deine Farm mit allen owned Boosts. Simulation: zusätzlich die gewählte NFT-/Skill-Kombination."
               }
             </p>
           </div>
