@@ -132,6 +132,14 @@ export function mapPortalResponse(raw: unknown): PlayerData {
         farm.gold && typeof farm.gold === "object"
           ? Object.keys(farm.gold as object).length
           : undefined,
+      crops:
+        farm.crops && typeof farm.crops === "object"
+          ? Object.keys(farm.crops as object).length
+          : undefined,
+      fruitPatches:
+        farm.fruitPatches && typeof farm.fruitPatches === "object"
+          ? Object.keys(farm.fruitPatches as object).length
+          : undefined,
     },
     inventory,
     buildings: buildingsSource,
@@ -210,7 +218,14 @@ export function getMockPlayerData(): PlayerData {
     nftId: 12345,
     balance: "42.5",
     coins: 5000,
-    resources: { trees: 8, stones: 6, iron: 3, gold: 1 },
+    resources: {
+      trees: 8,
+      stones: 6,
+      iron: 3,
+      gold: 1,
+      crops: 10,
+      fruitPatches: 4,
+    },
     inventory: {
       Wood: "530.4",
       Stone: "330",

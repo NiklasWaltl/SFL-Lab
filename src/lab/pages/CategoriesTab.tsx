@@ -92,6 +92,12 @@ export function CategoriesTab({
       { key: "stones", label: "🪨 Stones", value: resourceCounts.stones },
       { key: "iron", label: "⛏️ Iron", value: resourceCounts.iron },
       { key: "gold", label: "🥇 Gold", value: resourceCounts.gold },
+      { key: "crops", label: "🌾 Crops", value: resourceCounts.crops },
+      {
+        key: "fruitPatches",
+        label: "🍓 Fruit Patches",
+        value: resourceCounts.fruitPatches,
+      },
     ].filter(
       (tile): tile is { key: string; label: string; value: number } =>
         tile.value !== undefined && tile.value > 0,

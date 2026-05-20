@@ -17,6 +17,8 @@ export interface PlayerData {
     stones?: number;
     iron?: number;
     gold?: number;
+    crops?: number; // Anzahl Crop-Felder (farm.crops Record)
+    fruitPatches?: number; // Anzahl Frucht-Felder (farm.fruitPatches Record)
   };
   inventory: Record<string, string>;
   buildings?: Record<string, unknown[]>;
