@@ -15,17 +15,17 @@ export function computeOverviewKpis(
   actualResults: ResourceResult[],
   experimentResults: ResourceResult[],
   deltas: ExperimentDelta[],
-  globalParams: GlobalParams,
+  _globalParams: GlobalParams,
 ): OverviewKpis {
   const totalRevenuePerDay = actualResults.reduce(
     (sum, r) => sum + r.p2pRevenueFlw,
     0,
   );
 
-  const totalCostsPerDay = actualResults.reduce((sum, r) => {
-    const coinAsFlw = r.coinCostPerDay / globalParams.coinToFlowerRatio;
-    return sum + coinAsFlw + r.flwCostPerDay;
-  }, 0);
+  const totalCostsPerDay = actualResults.reduce(
+    (sum, r) => sum + r.flwCostPerDay,
+    0,
+  );
 
   const totalProfitPerDay = actualResults.reduce(
     (sum, r) => sum + r.p2pProfitFlw,

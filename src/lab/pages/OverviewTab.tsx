@@ -145,6 +145,8 @@ export function OverviewTab({
         mode={mode}
         ownedBoostCount={ownedBoostCount}
         experimentBoostCount={experimentBoostCount}
+        pricesAreLive={pricesAreLive}
+        pricesLastUpdated={pricesLastUpdated}
       />
 
       <section aria-label="Ist vs. Experiment">

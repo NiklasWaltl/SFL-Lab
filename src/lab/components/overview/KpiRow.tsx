@@ -10,6 +10,8 @@ interface KpiRowProps {
   mode: LabMode;
   ownedBoostCount: number;
   experimentBoostCount: number;
+  pricesAreLive?: boolean;
+  pricesLastUpdated?: string;
 }
 
 function formatFarmId(farmId: number): string {
@@ -18,15 +20,30 @@ function formatFarmId(farmId: number): string {
   return `…${id.slice(-6)}`;
 }
 
+function getPriceStatusLabel(
+  pricesAreLive?: boolean,
+  pricesLastUpdated?: string,
+): string {
+  if (pricesAreLive === true) return "🟢 Live-Preise";
+  if (pricesAreLive === false && pricesLastUpdated) return "🟡 Fallback-Preise";
+  return "🔵 Standard-Preise";
+}
+
 export function KpiRow({
   farm,
   kpis,
   mode,
   ownedBoostCount,
   experimentBoostCount,
+  pricesAreLive,
+  pricesLastUpdated,
 }: KpiRowProps) {
   const isExperimentView = mode === "experiment";
   const gridClass = "grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5";
+  const priceStatusLabel = getPriceStatusLabel(
+    pricesAreLive,
+    pricesLastUpdated,
+  );
 
   return (
     <section className="flex flex-col gap-4">
@@ -72,10 +89,11 @@ export function KpiRow({
           />
         )}
       </section>
+      <p className="text-xs text-gray-400">{priceStatusLabel}</p>
 
       <section className={gridClass}>
-        <KpiCard label="Aktuell Wood" value={farm?.woodBalance ?? 0} />
-        <KpiCard label="Aktuell Stone" value={farm?.stoneBalance ?? 0} />
+        <KpiCard label="Aktuell Wood" value={farm ? farm.woodBalance : "—"} />
+        <KpiCard label="Aktuell Stone" value={farm ? farm.stoneBalance : "—"} />
         <KpiCard label="Aktive Boosts" value={ownedBoostCount} />
         <KpiCard label="Experiment-Boosts" value={experimentBoostCount} />
         <KpiCard
@@ -84,6 +102,9 @@ export function KpiRow({
           title={farm ? String(farm.farmId) : undefined}
         />
       </section>
+      {!farm && (
+        <p className="text-xs text-amber-300/80">{"Keine Farm-Verbindung"}</p>
+      )}
     </section>
   );
 }
