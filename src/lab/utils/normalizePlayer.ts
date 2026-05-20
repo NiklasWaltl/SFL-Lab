@@ -11,6 +11,8 @@ function parseBalance(inventory: Record<string, string>, key: string): number {
 export function normalizeFarm(data: PlayerData): NormalizedFarm {
   return {
     farmId: data.farmId,
+    balance: data.balance,
+    coins: data.coins,
     woodBalance: parseBalance(data.inventory, "Wood"),
     stoneBalance: parseBalance(data.inventory, "Stone"),
     coinBalance: parseBalance(data.inventory, "Coin"),

@@ -94,6 +94,12 @@ export function KpiRow({
       <section className={gridClass}>
         <KpiCard label="Aktuell Wood" value={farm ? farm.woodBalance : "—"} />
         <KpiCard label="Aktuell Stone" value={farm ? farm.stoneBalance : "—"} />
+        {farm?.balance !== undefined && (
+          <KpiCard label="SFL" value={farm.balance} />
+        )}
+        {farm?.coins !== undefined && (
+          <KpiCard label="Coins" value={farm.coins.toLocaleString("de-DE")} />
+        )}
         <KpiCard label="Aktive Boosts" value={ownedBoostCount} />
         <KpiCard label="Experiment-Boosts" value={experimentBoostCount} />
         <KpiCard

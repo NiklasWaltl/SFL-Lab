@@ -111,6 +111,8 @@ export function mapPortalResponse(raw: unknown): PlayerData {
 
   return {
     farmId,
+    balance: typeof farm.balance === "string" ? farm.balance : undefined,
+    coins: typeof farm.coins === "number" ? farm.coins : undefined,
     bumpkin,
     inventory,
     buildings: buildingsSource,
@@ -186,6 +188,8 @@ export async function fetchPublicFarmData(
 export function getMockPlayerData(): PlayerData {
   return {
     farmId: 7762677082636687,
+    balance: "42.5",
+    coins: 5000,
     inventory: {
       Wood: "530.4",
       Stone: "330",

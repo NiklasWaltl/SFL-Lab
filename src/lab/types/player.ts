@@ -8,6 +8,8 @@ export interface Bumpkin {
 
 export interface PlayerData {
   farmId: number;
+  balance?: string;
+  coins?: number;
   bumpkin?: Bumpkin;
   inventory: Record<string, string>;
   buildings?: Record<string, unknown[]>;
@@ -16,6 +18,8 @@ export interface PlayerData {
 
 export interface NormalizedFarm {
   farmId: number;
+  balance?: string;
+  coins?: number;
   woodBalance: number;
   stoneBalance: number;
   coinBalance: number;
